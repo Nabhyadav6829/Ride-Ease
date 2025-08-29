@@ -1,0 +1,395 @@
+// App.js
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import HomePage from './components/HomePage';
+import LoginPage from './components/loginPage';
+import SignupPage from './components/SignupPage';
+import LogoutPage from './components/LogoutPage';
+import Contact from './components/Contact';
+import Partner from './components/Partner';
+import Deliverables from './components/Deliverables';
+import ProfilePage from './components/ProfilePage';
+import Navbar from './pages/Navbar';
+import BookingPage from './components/BookingPage';
+import BookedPage from './components/BookedPage';
+import MyRidesPage from './components/MyRidesPage';
+import SettingsPage from './components/Settings';
+import DriverRidesPage from './components/DriverRidesPage';
+import DriverHomePage from './components/DriverHome';
+import DriverLogoutPage from './components/DriverLogoutPage';
+import DriverProfilePage from './components/DriverProfilePage';
+import EarningsPage from './components/EarningsPage';
+import DriverContactPage from './components/DriverContactPage';
+import DriverSettingsPage from './components/DriverSettings';
+
+// NOTE: You have not provided a DriverLoginPage component, so its route is commented out below.
+
+function AppContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isRideActive, setIsRideActive] = useState(false);
+  const [rideDetails, setRideDetails] = useState(null);
+
+  // ++ CHANGE 1: Navbar hide condition updated (hide for ALL /driver/* paths) ++
+  const shouldHideNavbar =
+    location.pathname.startsWith('/driver') || location.pathname === '/logout';
+
+  const handleStartRide = (bookingInfo) => {
+    if (isRideActive) return;
+
+    setIsRideActive(true);
+    let rideTimers = {};
+
+    setRideDetails({
+      ...bookingInfo,
+      isSearching: true,
+      driver: null,
+      arrivalTime: 0,
+      hasArrived: false,
+      destinationTime: 0,
+    });
+
+    const searchTimer = setTimeout(() => {
+      const names = ['Ramesh Kumar', 'Alice Singh', 'Bob Builder', 'Kalu Lala', 'Mike'];
+      const randomName = names[Math.floor(Math.random() * names.length)];
+      const randomPlate = `DL${Math.floor(Math.random() * 90 + 10)}AB${Math.floor(Math.random() * 9000 + 1000)}`;
+      const randomRating = (Math.random() * 1 + 4).toFixed(1);
+      const arrivalMinutes = Math.floor(Math.random() * 3) + 1;
+      const destMinutes = Math.floor(Math.random() * 11) + 5;
+
+      const driver = { name: randomName, plate: randomPlate, rating: randomRating };
+
+      setRideDetails(prev => (prev ? {
+        ...prev,
+        isSearching: false,
+        driver,
+        arrivalTime: arrivalMinutes,
+        destinationTime: destMinutes,
+        timers: rideTimers
+      } : null));
+
+      // Save to backend
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetch('http://localhost:5000/api/rides', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            selectedVehicle: bookingInfo.selectedVehicle,
+            pickups: bookingInfo.pickups,
+            drops: bookingInfo.drops,
+            driver,
+            arrivalTime: arrivalMinutes,
+            destinationTime: destMinutes,
+            status: 'booked',
+          }),
+        }).catch(err => console.error('Error saving ride:', err));
+      }
+
+      const arrivalInterval = setInterval(() => {
+        setRideDetails(prev => {
+          if (!prev) return null;
+          let newArrival = prev.arrivalTime - 1;
+          if (newArrival <= 0) {
+            clearInterval(arrivalInterval);
+            const destInterval = setInterval(() => {
+              setRideDetails(prevDest => {
+                if (!prevDest) return null;
+                let newDest = prevDest.destinationTime - 1;
+                if (newDest <= 0) {
+                  clearInterval(destInterval);
+                  setIsRideActive(false);
+                  setRideDetails(null);
+                  navigate('/');
+                  return null;
+                }
+                return { ...prevDest, destinationTime: newDest };
+              });
+            }, 60000);
+            rideTimers.destIntervalId = destInterval;
+            return { ...prev, hasArrived: true, arrivalTime: 0, timers: { ...rideTimers } };
+          }
+          return { ...prev, arrivalTime: newArrival };
+        });
+      }, 60000);
+
+      rideTimers.arrivalIntervalId = arrivalInterval;
+    }, 3000);
+
+    rideTimers.searchTimerId = searchTimer;
+    setRideDetails(prev => (prev ? { ...prev, timers: rideTimers } : null));
+  };
+
+  const handleCancelRide = () => {
+    if (rideDetails && rideDetails.timers) {
+      clearTimeout(rideDetails.timers.searchTimerId);
+      if (rideDetails.timers.arrivalIntervalId) clearInterval(rideDetails.timers.arrivalIntervalId);
+      if (rideDetails.timers.destIntervalId) clearInterval(rideDetails.timers.destIntervalId);
+    }
+    setIsRideActive(false);
+    setRideDetails(null);
+    navigate('/');
+  };
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      const role = localStorage.getItem('role');
+
+      // For drivers, skip backend verification and use localStorage data
+      if (role === 'driver' && token && storedUser) {
+        setIsLoggedIn(true);
+        setUser(JSON.parse(storedUser));
+        setLoading(false);
+        return;
+      }
+
+      // For non-drivers, perform backend verification
+      if (token) {
+        try {
+          const endpoint = role === 'driver' ? '/api/drivers/verify' : '/api/users/verify';
+          const response = await fetch(`http://localhost:5000${endpoint}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          if (response.ok) {
+            setIsLoggedIn(true);
+            if (storedUser) {
+              setUser(JSON.parse(storedUser));
+            } else {
+              const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+              const userData = tokenPayload.user || tokenPayload;
+              setUser(userData);
+              localStorage.setItem('user', JSON.stringify(userData));
+            }
+          } else {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('role');
+            setIsLoggedIn(false);
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Error verifying token:', error);
+          setIsLoggedIn(true);
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          } else {
+            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+            const userData = tokenPayload.user || tokenPayload;
+            setUser(userData);
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+        }
+      } else {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+      setLoading(false);
+    };
+    checkAuthStatus();
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'token') {
+        if (!e.newValue) {
+          setIsLoggedIn(false);
+          setUser(null);
+          localStorage.removeItem('role');
+        } else {
+          setIsLoggedIn(true);
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          }
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const handleUserUpdate = (updatedUserData) => {
+    const updatedUser = {
+      ...updatedUserData,
+      profileImageUrl: updatedUserData.avatarUrl || updatedUserData.profileImageUrl,
+    };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
+  const handleLogin = (userData, token) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('role', userData.role || (token.includes('driver') ? 'driver' : 'user'));
+    setIsLoggedIn(true);
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('rememberMe');
+    localStorage.removeItem('rememberDriver');
+    localStorage.removeItem('role');
+    setIsLoggedIn(false);
+    setUser(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ paddingBottom: isRideActive ? '120px' : '0' }}>
+      {/* ++ CHANGE 2: Use shouldHideNavbar condition ++ */}
+      {!shouldHideNavbar && (
+        <Navbar user={user} isLoggedIn={isLoggedIn} onLogout={handleLogout} />
+      )}
+      <Routes>
+        <Route path="/booking" element={<BookingPage />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/deliverables" element={<Deliverables />} />
+        <Route path="/partner" element={<Partner />} />
+        <Route
+          path="/profile"
+          element={
+            isLoggedIn && user ? (
+              <ProfilePage
+                isLoggedIn={isLoggedIn}
+                user={user}
+                onUserUpdate={handleUserUpdate}
+              />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <SettingsPage
+              isLoggedIn={isLoggedIn}
+              user={user}
+              onUserUpdate={setUser}
+            />
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <HomePage
+              isLoggedIn={isLoggedIn}
+              setIsLoggedIn={setIsLoggedIn}
+              user={user}
+              setUser={setUser}
+            />
+          }
+        />
+        <Route
+          path="/logout"
+          element={
+            <LogoutPage
+              setIsLoggedIn={setIsLoggedIn}
+              setUser={setUser}
+              onLogout={handleLogout}
+            />
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            isLoggedIn ? (
+              <Navigate to={localStorage.getItem('role') === 'driver' ? '/driver/home' : '/'} replace />
+            ) : (
+              <LoginPage
+                setIsLoggedIn={setIsLoggedIn}
+                setUser={setUser}
+                onLogin={handleLogin}
+              />
+            )
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            isLoggedIn ? (
+              <Navigate to={localStorage.getItem('role') === 'driver' ? '/driver/home' : '/'} replace />
+            ) : (
+              <SignupPage
+                setIsLoggedIn={setIsLoggedIn}
+                setUser={setUser}
+                onLogin={handleLogin}
+              />
+            )
+          }
+        />
+        <Route path="/booked" element={<BookedPage onRideStart={handleStartRide} />} />
+        <Route
+          path="/my-rides"
+          element={
+            isLoggedIn ? (
+              <MyRidesPage />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        {/* Driver Routes */}
+        <Route path="/driver/home" element={<DriverHomePage isLoggedIn={true} />} />
+        <Route path="/driver/settings" element={<DriverSettingsPage isLoggedIn={true} />} />
+        {/* <Route path="/driver/login" element={<DriverLoginPage />} /> */}
+        <Route path="/driver/rides" element={<DriverRidesPage />} />
+        <Route
+          path="/driver/logout"
+          element={<DriverLogoutPage setIsLoggedIn={setIsLoggedIn} setUser={setUser} />}
+        />
+        <Route
+          path="/driver/earnings"
+          element={isLoggedIn ? <EarningsPage /> : <Navigate to="/driver/login" />}
+        />
+        <Route
+          path="/driver/profile"
+          element={isLoggedIn ? <DriverProfilePage /> : <Navigate to="/driver/login" />}
+        />
+        <Route
+          path="/driver/contact"
+          element={isLoggedIn ? <DriverContactPage /> : <Navigate to="/driver/login" />}
+        />
+      </Routes>
+      {isRideActive && (
+        <RideStatusBanner details={rideDetails} onCancel={handleCancelRide} />
+      )}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
+}
+
+export default App;

@@ -1,0 +1,405 @@
+// components/HomePage.jsx
+import React, { useState } from 'react';
+import {
+  Car, Package, ShieldCheck, Zap, Wallet, Star,
+  ArrowRight, User, Map, CheckCircle, MapPin, Navigation,
+  Plus, X, Route, Users, Clock, TrendingUp
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+// Accept isLoggedIn as a prop
+export default function Home({ isLoggedIn }) {
+  const [pickupLocations, setPickupLocations] = useState(['']);
+  const [dropLocations, setDropLocations] = useState(['']);
+
+  const navigate = useNavigate();
+
+  const addPickupLocation = () => {
+    setPickupLocations([...pickupLocations, '']);
+  };
+
+  const addDropLocation = () => {
+    setDropLocations([...dropLocations, '']);
+  };
+
+  const removePickupLocation = (index) => {
+    if (pickupLocations.length > 1) {
+      setPickupLocations(pickupLocations.filter((_, i) => i !== index));
+    }
+  };
+
+  const removeDropLocation = (index) => {
+    if (dropLocations.length > 1) {
+      setDropLocations(dropLocations.filter((_, i) => i !== index));
+    }
+  };
+
+  const updatePickupLocation = (index, value) => {
+    const updated = [...pickupLocations];
+    updated[index] = value;
+    setPickupLocations(updated);
+  };
+
+  const updateDropLocation = (index, value) => {
+    const updated = [...dropLocations];
+    updated[index] = value;
+    setDropLocations(updated);
+  };
+
+  // Updated function to check for login status
+  const handleBookRide = (e) => {
+    e.preventDefault();
+
+    // 1. Check if the user is logged in
+    if (!isLoggedIn) {
+      // If not, redirect to the login page
+      navigate('/login');
+      return;
+    }
+
+    // 2. If logged in, continue with the existing logic
+    const validPickups = pickupLocations.filter(loc => loc.trim());
+    const validDrops = dropLocations.filter(loc => loc.trim());
+    
+    if (validPickups.length === 0 || validDrops.length === 0) {
+      alert('Please enter at least one pickup and one drop location');
+      return;
+    }
+    
+    navigate('/booking', { state: { pickups: validPickups, drops: validDrops } });
+  };
+
+  const features = [
+    {
+      icon: <Route className="h-8 w-8 text-white" />,
+      title: "Multi-Stop Routes",
+      description: "Pick up and drop off at multiple locations in a single trip. Perfect for group travel and errands.",
+      color: "from-emerald-500 to-emerald-600"
+    },
+    {
+      icon: <Users className="h-8 w-8 text-white" />,
+      title: "Group-Friendly",
+      description: "Coordinate rides for multiple people with different pickup points but same destination.",
+      color: "from-blue-500 to-blue-600"
+    },
+    {
+      icon: <Clock className="h-8 w-8 text-white" />,
+      title: "Time Efficient",
+      description: "Optimize your route automatically. Save time with our intelligent multi-stop planning.",
+      color: "from-purple-500 to-purple-600"
+    },
+    {
+      icon: <Wallet className="h-8 w-8 text-white" />,
+      title: "Cost Effective",
+      description: "Split costs across multiple stops. More locations, better value per kilometer traveled.",
+      color: "from-green-500 to-green-600"
+    }
+  ];
+
+  const useCases = [
+    {
+      title: "Airport Transfers",
+      description: "Pick up multiple passengers from different hotels for airport transfers",
+      icon: "✈️"
+    },
+    {
+      title: "Shopping Trips",
+      description: "Visit multiple malls and markets in a single organized trip",
+      icon: "🛍️"
+    },
+    {
+      title: "Corporate Events",
+      description: "Coordinate employee transportation from multiple office locations",
+      icon: "🏢"
+    },
+    {
+      title: "Wedding Parties",
+      description: "Transport wedding guests from various locations to the venue",
+      icon: "💒"
+    }
+  ];
+
+  const testimonials = [
+    {
+      quote: "The multi-pickup feature saved our wedding day! We could coordinate all family members from different hotels to the venue seamlessly.",
+      name: "Priya & Arjun",
+      role: "Wedding Couple"
+    },
+    {
+      quote: "Perfect for our corporate events. One booking, multiple pickups from different offices, and everyone reaches the conference together.",
+      name: "Rajesh Kumar",
+      role: "HR Manager"
+    }
+  ];
+
+  return (
+    <div className="bg-gradient-to-br from-gray-50 to-emerald-50 text-gray-800">
+      {/* Hero Section */}
+      <section className="pt-24 md:pt-32 pb-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+              Multiple Pickups,
+              <br />
+              <span className="text-emerald-600">One Smart Route.</span>
+            </h1>
+            <p className="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
+              Revolutionary multi-location ride booking. Add multiple pickup points and destinations in a single trip. Perfect for groups, events, and efficient city travel.
+            </p>
+          </div>
+
+          {/* Multi-Location Booking Form */}
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
+              <div className="grid lg:grid-cols-2 gap-8">
+                
+                {/* Pickup Locations */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                      <MapPin className="h-6 w-6 text-emerald-500 mr-2" />
+                      Pickup Locations
+                    </h3>
+                    <button
+                      onClick={addPickupLocation}
+                      className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 p-2 rounded-full transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {pickupLocations.map((location, index) => (
+                      <div key={index} className="relative flex items-center gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                          <span className="text-emerald-600 font-semibold text-sm">{index + 1}</span>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder={`Pickup location ${index + 1}`}
+                          value={location}
+                          onChange={(e) => updatePickupLocation(index, e.target.value)}
+                          className="flex-1 py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                        />
+                        {pickupLocations.length > 1 && (
+                          <button
+                            onClick={() => removePickupLocation(index)}
+                            className="flex-shrink-0 text-red-500 hover:text-red-700 p-1"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Drop Locations */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                      <Navigation className="h-6 w-6 text-red-500 mr-2" />
+                      Drop Locations
+                    </h3>
+                    <button
+                      onClick={addDropLocation}
+                      className="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-full transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {dropLocations.map((location, index) => (
+                      <div key={index} className="relative flex items-center gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                          <span className="text-red-600 font-semibold text-sm">{index + 1}</span>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder={`Drop location ${index + 1}`}
+                          value={location}
+                          onChange={(e) => updateDropLocation(index, e.target.value)}
+                          className="flex-1 py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all"
+                        />
+                        {dropLocations.length > 1 && (
+                          <button
+                            onClick={() => removeDropLocation(index)}
+                            className="flex-shrink-0 text-red-500 hover:text-red-700 p-1"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={handleBookRide}
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-4 px-6 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transform hover:scale-105 transition duration-300 font-semibold shadow-lg flex items-center justify-center text-lg"
+                >
+                  Book Multi-Location Ride <Route className="ml-2 h-6 w-6" />
+                </button>
+                <button 
+                  onClick={() => navigate('/deliverables')}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-4 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center">
+                  <Package className="mr-2 h-5 w-5" />
+                  Multi-Drop Delivery
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-emerald-600">50K+</div>
+              <div className="text-sm text-gray-600">Multi-location trips</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-emerald-600">8</div>
+              <div className="text-sm text-gray-600">Max stops per trip</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-emerald-600">35%</div>
+              <div className="text-sm text-gray-600">Cost savings</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-emerald-600">4.9★</div>
+              <div className="text-sm text-gray-600">User rating</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Multi-Location Rides?</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Experience the future of urban mobility with intelligent multi-stop route planning.
+            </p>
+          </div>
+          <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => (
+              <div key={index} className="bg-gray-50 rounded-2xl p-6 text-center shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+                <div className={`inline-flex p-4 rounded-full bg-gradient-to-br ${feature.color} mb-4`}>
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-gray-600 text-sm">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases Section */}
+      <section className="py-20 bg-gradient-to-r from-emerald-50 to-blue-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900">Perfect for Every Occasion</h2>
+            <p className="mt-2 text-lg text-gray-600">See how multi-location rides make life easier</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {useCases.map((useCase, index) => (
+              <div key={index} className="bg-white p-6 rounded-2xl shadow-lg text-center hover:shadow-xl transition-shadow">
+                <div className="text-4xl mb-4">{useCase.icon}</div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{useCase.title}</h3>
+                <p className="text-gray-600 text-sm">{useCase.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-gray-900">Book Multi-Location Rides in 3 Steps</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center">
+                    <div className="bg-emerald-100 p-5 rounded-full mb-6 w-20 h-20 mx-auto flex items-center justify-center">
+                        <MapPin className="h-10 w-10 text-emerald-600" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">1. Add Multiple Locations</h3>
+                    <p className="text-gray-600">Enter all your pickup and drop-off points. Add as many as you need for your journey.</p>
+                </div>
+                <div className="text-center">
+                    <div className="bg-emerald-100 p-5 rounded-full mb-6 w-20 h-20 mx-auto flex items-center justify-center">
+                        <Route className="h-10 w-10 text-emerald-600" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">2. Optimize Route</h3>
+                    <p className="text-gray-600">Our AI automatically plans the most efficient route saving time and money.</p>
+                </div>
+                <div className="text-center">
+                    <div className="bg-emerald-100 p-5 rounded-full mb-6 w-20 h-20 mx-auto flex items-center justify-center">
+                        <CheckCircle className="h-10 w-10 text-emerald-600" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">3. Enjoy the Ride</h3>
+                    <p className="text-gray-600">Track your multi-stop journey in real-time and get everyone where they need to go.</p>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 bg-emerald-600 text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold">Loved by Event Organizers & Groups</h2>
+            <p className="mt-2 text-lg text-emerald-100">Real stories from our multi-location ride users</p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <div key={index} className="bg-white/10 p-8 rounded-2xl backdrop-blur-sm">
+                <div className="flex mb-4">
+                    {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />)}
+                </div>
+                <p className="text-emerald-50 mb-6 italic">"{testimonial.quote}"</p>
+                <div>
+                  <p className="font-bold">{testimonial.name}</p>
+                  <p className="text-sm text-emerald-200">{testimonial.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA Section */}
+      <section className="py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Start Your Multi-Location Journey</h2>
+                <p className="mt-4 text-gray-600 text-lg">
+                    Download RideEase and experience the most advanced multi-stop ride booking platform.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <a href="#" className="bg-gray-900 text-white py-3 px-6 rounded-lg flex items-center transition-transform hover:scale-105">
+                        <div className="text-xl mr-2">🍎</div>
+                        <div>
+                            <p className="text-xs">Download on the</p>
+                            <p className="text-lg font-semibold">App Store</p>
+                        </div>
+                    </a>
+                    <a href="#" className="bg-gray-900 text-white py-3 px-6 rounded-lg flex items-center transition-transform hover:scale-105">
+                        <div className="text-xl mr-3">▶</div>
+                        <div>
+                            <p className="text-xs">GET IT ON</p>
+                            <p className="text-lg font-semibold">Google Play</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+      </section>
+    </div>
+  );
+}
