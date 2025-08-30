@@ -75,10 +75,12 @@ const app = express();
 // --- CORS Configuration ---
 // A whitelist of allowed origins.
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://ride-ease-six.vercel.app', // Fallback to Vercel URL if env var is missing
-  'http://localhost:3000', // Example for local development
-  'http://localhost:5173', // Example for local Vite development
+  'https://ride-ease-six.vercel.app',
+  'https://ride-ease.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173'
 ];
+
 
 const corsOptions = {
   origin: (origin, callback) => {
