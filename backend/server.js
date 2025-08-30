@@ -57,8 +57,6 @@
 
 
 
-
-// backend/server.js
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -85,22 +83,22 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // The 'origin' is the URL of the frontend making the request.
-    // We allow the request if the origin is in our whitelist or if there's no origin (like for server-to-server requests or tools like Postman).
+    // Allow requests with no origin (like Postman) or if the origin is in the whitelist
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.error(`CORS blocked for origin: ${origin}`); // Log blocked origin for debugging
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true, // Important for sending cookies or authorization headers.
-  optionsSuccessStatus: 204, // Responds to preflight requests with a 204 No Content.
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'], // Explicitly list allowed methods
+  credentials: true, // Allow cookies and authorization headers
+  optionsSuccessStatus: 204, // Respond to preflight requests with 204
+  allowedHeaders: ['Content-Type', 'Authorization'], // Explicitly allow necessary headers
 };
 
 // --- Middlewares ---
-// Apply the specific CORS configuration BEFORE your routes.
-// This is the most crucial part.
+// Apply CORS middleware before routes
 app.use(cors(corsOptions));
 
 app.use(express.json()); // To parse JSON bodies.
