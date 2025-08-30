@@ -54,7 +54,6 @@
 
 
 
-
 // backend/server.js
 const express = require('express');
 const cors = require('cors');
@@ -66,7 +65,7 @@ const path = require('path');
 const userRoutes = require('./routes/userRoutes');
 const rideRoutes = require('./routes/rideRoutes');
 const driverrideRoutes = require('./routes/driverrideRoutes');
-const driverRoutes = require('./routes/driverRoutes'); 
+const driverRoutes = require('./routes/driverRoutes');
 
 const FrontendUrl = process.env.FRONTEND_URL;
 
@@ -107,7 +106,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 // --- Database Connection ---
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ride-booking-app');
+    await mongoose.connect(
+      process.env.MONGO_URI || 'mongodb://localhost:27017/ride-booking-app'
+    );
     console.log('✅ MongoDB Connected...');
   } catch (err) {
     console.error('❌ MongoDB Connection Error:', err.message);
@@ -118,7 +119,9 @@ connectDB();
 
 // --- API Routes ---
 app.get('/', (req, res) => {
-  res.send(`API is running... Visit the frontend here: <a href="${FrontendUrl}">${FrontendUrl}</a>`);
+  res.send(
+    `API is running... Visit the frontend here: <a href="${FrontendUrl}">${FrontendUrl}</a>`
+  );
 });
 
 app.use('/api/users', userRoutes);
@@ -128,4 +131,6 @@ app.use('/api/rides', driverrideRoutes);
 
 // --- Server Initialization ---
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`🚀 Server running on port ${PORT}`)
+);
