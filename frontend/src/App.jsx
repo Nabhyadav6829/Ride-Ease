@@ -1,26 +1,26 @@
 // App.js
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import HomePage from './components/HomePage';
-import LoginPage from './components/loginPage';
-import SignupPage from './components/SignupPage';
-import LogoutPage from './components/LogoutPage';
-import Contact from './components/Contact';
-import Partner from './components/Partner';
-import Deliverables from './components/Deliverables';
-import ProfilePage from './components/ProfilePage';
-import Navbar from './pages/Navbar';
-import BookingPage from './components/BookingPage';
-import BookedPage from './components/BookedPage';
-import MyRidesPage from './components/MyRidesPage';
-import SettingsPage from './components/Settings';
-import DriverRidesPage from './components/DriverRidesPage';
-import DriverHomePage from './components/DriverHome';
-import DriverLogoutPage from './components/DriverLogoutPage';
-import DriverProfilePage from './components/DriverProfilePage';
-import EarningsPage from './components/EarningsPage';
-import DriverContactPage from './components/DriverContactPage';
-import DriverSettingsPage from './components/DriverSettings';
+import HomePage from './pages/HomePages/HomePage';
+import LoginPage from './pages/auth/loginPage';
+import SignupPage from './pages/auth/SignupPage';
+import LogoutPage from './pages/LogoutPages/LogoutPage';
+import Contact from './pages/contactspage/Contact';
+import Partner from './pages/StaticPages/Partner';
+import Deliverables from './pages/StaticPages/Deliverables';
+import ProfilePage from './pages/Profile/ProfilePage';
+import Navbar from './components/Navbar';
+import BookingPage from './pages/BookingPages/BookingPage';
+import BookedPage from './pages/BookingPages/BookedPage';
+import MyRidesPage from './pages/RidesPages/MyRidesPage';
+import SettingsPage from './pages/SettingsPages/Settings';
+import DriverRidesPage from './pages/RidesPages/DriverRidesPage';
+import DriverHomePage from './pages/HomePages/DriverHome';
+import DriverLogoutPage from './pages/LogoutPages/DriverLogoutPage';
+import DriverProfilePage from './pages/Profile/DriverProfilePage';
+import EarningsPage from './pages/StaticPages/EarningsPage';
+import DriverContactPage from './pages/contactspage/DriverContactPage';
+import DriverSettingsPage from './pages/SettingsPages/DriverSettings';
 
 // NOTE: You have not provided a DriverLoginPage component, so its route is commented out below.
 

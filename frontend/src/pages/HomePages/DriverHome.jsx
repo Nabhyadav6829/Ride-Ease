@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom';
 
 import axios from 'axios';
 
-import OpenSourceRouteMap from '../OpenSourceRouteMap';
+import OpenSourceRouteMap from '../../components/OpenSourceRouteMap';
 
 // Helper for API calls (assumes token is stored in localStorage)
 const getAuthHeaders = () => {

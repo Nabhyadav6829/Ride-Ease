@@ -479,7 +479,7 @@ import {
 } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import OpenSourceRouteMap from '../OpenSourceRouteMap.jsx';
+import OpenSourceRouteMap from '../../components/OpenSourceRouteMap';
 
 function VehicleSelectionSheet({ isOpen, onClose, vehicles, selectedVehicle, onSelectVehicle, onConfirm }) {
     if (!isOpen) return null;

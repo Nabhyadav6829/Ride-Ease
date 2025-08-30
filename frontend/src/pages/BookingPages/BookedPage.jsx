@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star } from 'lucide-react';
-import OpenSourceRouteMap from '../OpenSourceRouteMap.jsx';
+import OpenSourceRouteMap from '../../components/OpenSourceRouteMap';
 import axios from 'axios';
 
 export default function BookedPage() {
