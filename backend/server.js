@@ -55,71 +55,65 @@
 
 
 
-
+// backend/server.js
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const mongoose = require('mongoose');
 const path = require('path');
 
-// Import routes at the top for better organization
+// Import routes
 const userRoutes = require('./routes/userRoutes');
 const rideRoutes = require('./routes/rideRoutes');
 const driverrideRoutes = require('./routes/driverrideRoutes');
-const driverRoutes = require('./routes/driverRoutes'); // Driver routes
+const driverRoutes = require('./routes/driverRoutes'); 
+
 const FrontendUrl = process.env.FRONTEND_URL;
 
 // Initialize express app
 const app = express();
 
 // --- CORS Configuration ---
-// A whitelist of allowed origins.
 const allowedOrigins = [
   'https://ride-ease-six.vercel.app',
-  'https://ride-ease.vercel.app',
+  'https://ride-ease.vercel.app', // backup if project renamed
   'http://localhost:3000',
   'http://localhost:5173'
 ];
 
-
 const corsOptions = {
   origin: (origin, callback) => {
-    // Log the origin for debugging
-    console.log(`Request Origin: ${origin}`);
-    // Allow requests with no origin (e.g., Postman) or if the origin is in the whitelist
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS blocked for origin: ${origin}`));
+      callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
-  credentials: true, // Allow cookies and authorization headers
-  optionsSuccessStatus: 204, // Respond to preflight requests with 204
-  allowedHeaders: ['Content-Type', 'Authorization'], // Explicitly allow necessary headers
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204,
 };
 
-// --- Middlewares ---
-// Apply CORS middleware as the first middleware
+// Apply CORS middleware at the very top
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // handle preflight requests
 
-app.use(express.json()); // To parse JSON bodies.
+// Middleware to parse JSON
+app.use(express.json());
 
-// Serve static files from the 'Uploads' directory
+// Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
 // --- Database Connection ---
 const connectDB = async () => {
   try {
-    // Best practice to use an environment variable for your database connection string.
     await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/ride-booking-app');
-    console.log('MongoDB Connected...');
+    console.log('✅ MongoDB Connected...');
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ MongoDB Connection Error:', err.message);
     process.exit(1);
   }
 };
-
 connectDB();
 
 // --- API Routes ---
@@ -127,7 +121,6 @@ app.get('/', (req, res) => {
   res.send(`API is running... Visit the frontend here: <a href="${FrontendUrl}">${FrontendUrl}</a>`);
 });
 
-// Use Routes
 app.use('/api/users', userRoutes);
 app.use('/api/rides', rideRoutes);
 app.use('/api/drivers', driverRoutes);
@@ -135,4 +128,4 @@ app.use('/api/rides', driverrideRoutes);
 
 // --- Server Initialization ---
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
