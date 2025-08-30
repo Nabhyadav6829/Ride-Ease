@@ -56,7 +56,7 @@ export default function DeliverablesComingSoon() {
               RideEase <span className="text-emerald-600">Deliverables</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Beyond rides, we're expanding to deliver everything you need. From food to medicines, 
+              Beyond rides, we're expanding to deliver everything you need. From food to medicines,
               gifts to groceries - all with the same reliability you trust.
             </p>
           </div>
@@ -67,7 +67,7 @@ export default function DeliverablesComingSoon() {
               <div className="text-6xl md:text-6xl font-bold text-emerald-600 mb-4 leading-none">
                 COMING
               <span className="text-6xl md:text-6xl font-bold text-gray-900 mb-6 leading-none">
-                 -SOON
+                  -SOON
                 </span>
               </div>
               <p className="text-xl md:text-2xl text-gray-600 font-medium">
@@ -177,7 +177,7 @@ export default function DeliverablesComingSoon() {
                   No delivery fees for the first month
                 </div>
               </div>
-              
+
               <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-lg p-6 text-white">
                 <h4 className="font-bold text-lg mb-2">Limited Beta Access</h4>
                 <p className="text-emerald-100 text-sm">Only 1,000 early access spots available. Reserve yours today!</p>
@@ -194,9 +194,9 @@ export default function DeliverablesComingSoon() {
                 Join our waitlist and get notified the moment RideEase Deliverables goes live in your area.
               </p>
             </div>
-            
+
             <div className="max-w-md mx-auto">
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="email"
                   value={emailSignup}
@@ -217,7 +217,7 @@ export default function DeliverablesComingSoon() {
                 </div>
               )}
             </div>
-            
+
             <div className="mt-6 text-center">
               <p className="text-gray-500 text-sm">
                 Join <span className="font-semibold text-emerald-600">2,847</span> people already on the waitlist
@@ -234,7 +234,7 @@ export default function DeliverablesComingSoon() {
                 <p className="text-gray-600 text-sm mb-4">
                   We're targeting a launch in approximately 45 days. Waitlist subscribers will get 48-hour early access.
                 </p>
-                
+
                 <h4 className="font-semibold text-gray-900 mb-2">Which areas will be covered first?</h4>
                 <p className="text-gray-600 text-sm mb-4">
                   We're starting with major cities including Delhi NCR, Mumbai, Bangalore, and expanding rapidly to other metros.
@@ -245,7 +245,7 @@ export default function DeliverablesComingSoon() {
                 <p className="text-gray-600 text-sm mb-4">
                   Not at all! Our ride services continue as usual. Deliverables is an additional service using our trusted network.
                 </p>
-                
+
                 <h4 className="font-semibold text-gray-900 mb-2">How do I become a delivery partner?</h4>
                 <p className="text-gray-600 text-sm mb-4">
                   Partner applications will open 2 weeks before launch. Existing RideEase drivers get priority enrollment.
