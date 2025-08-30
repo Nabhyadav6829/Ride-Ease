@@ -10,7 +10,7 @@ const userRoutes = require('./routes/userRoutes');
 const rideRoutes = require('./routes/rideRoutes');
 const driverrideRoutes = require('./routes/driverrideRoutes');
 const driverRoutes = require('./routes/driverRoutes'); // Driver routes
-
+const FrontendUrl = process.env.FRONTEND_URL;
 // Initialize express app
 const app = express();
 
@@ -40,7 +40,7 @@ connectDB();
 
 // --- API Routes ---
 app.get('/', (req, res) => {
-  res.send('Ride-Booking API is running...');
+  res.send(`click here <a href="${FrontendUrl}">${FrontendUrl}</a>`);
 });
 
 // Use Routes

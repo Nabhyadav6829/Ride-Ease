@@ -166,6 +166,7 @@ const LoginPage = ({ setIsLoggedIn, setUser, onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [role, setRole] = useState('user'); // State to track the selected role
   const navigate = useNavigate();
+  const BackendUrl=import.meta.env.VITE_BACKEND_URL;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -201,7 +202,7 @@ const LoginPage = ({ setIsLoggedIn, setUser, onLogin }) => {
       setIsLoading(true);
       try {
         const endpoint = role === 'user' ? '/api/users/login' : '/api/drivers/login';
-        const res = await fetch(`http://localhost:5000${endpoint}`, {
+        const res = await fetch(`${BackendUrl}${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),

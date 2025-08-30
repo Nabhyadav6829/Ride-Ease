@@ -37,7 +37,7 @@ export default function MyRidesPage() {
     const [error, setError] = useState(null);
     const [selectedDate, setSelectedDate] = useState('');
     const [isFiltering, setIsFiltering] = useState(false); // NEW: State for filter loader
-
+const BackendUrl=import.meta.env.VITE_BACKEND_URL;
     useEffect(() => {
         const fetchRides = async () => {
             try {
@@ -45,7 +45,7 @@ export default function MyRidesPage() {
                 if (!token) {
                     throw new Error('No authentication token found. Please log in.');
                 }
-                const response = await axios.get('http://localhost:5000/api/rides/', {
+                const response = await axios.get(`${BackendUrl}/api/rides/`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const sortedRides = response.data.sort((a, b) => new Date(b.bookedAt) - new Date(a.bookedAt));

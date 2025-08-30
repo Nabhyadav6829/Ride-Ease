@@ -14,7 +14,7 @@ export default function BookedPage() {
     const [arrivalTime, setArrivalTime] = useState(0);
     const [hasArrived, setHasArrived] = useState(false);
     const [destinationTime, setDestinationTime] = useState(0);
-
+    const BackendUrl=import.meta.env.VITE_BACKEND_URL;
     if (!state || !state.selectedVehicle || !state.pickups || !state.drops) {
         return <div>Invalid booking</div>;
     }
@@ -39,7 +39,7 @@ export default function BookedPage() {
             setDestinationTime(destMinutes);
 
             // Save the ride to the backend
-            axios.post('http://localhost:5000/api/rides', {
+            axios.post(`${BackendUrl}/api/rides`, {
                 selectedVehicle,
                 pickups,
                 drops,

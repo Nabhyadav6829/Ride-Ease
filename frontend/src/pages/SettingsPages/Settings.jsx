@@ -201,10 +201,11 @@ export default function SettingsPage({ isLoggedIn, user, onUserUpdate }) {
   };
 
   const handleDataExport = async () => {
+    const BackendUrl=import.meta.env.VITE_BACKEND_URL;
     setIsExporting(true);
     try {
       // Simulate fetching previous rides from API
-      const response = await fetch('http://localhost:5000/api/rides/', {
+      const response = await fetch(`${BackendUrl}/api/rides/`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
