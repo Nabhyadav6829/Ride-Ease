@@ -7,7 +7,7 @@ export default function Navbar({ user }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
 
-  const navLinks = ['Home', 'Partner', 'Contact'];
+  const navLinks = ['Home', 'Partner', 'Deliverables', 'Contact'];
 
   const handleLogout = () => {
     navigate('/logout');
@@ -27,7 +27,7 @@ export default function Navbar({ user }) {
 
           <nav className="hidden md:flex space-x-6 items-center">
             {navLinks.map((link, idx) =>
-              link === 'Home' || link === 'Contact' || link === 'Partner' ? (
+              link === 'Home' || link === 'Contact' || link === 'Partner' || link === 'Deliverables' ? (
                 <Link
                   key={idx}
                   to={link === 'Home' ? '/' : `/${link.toLowerCase()}`}
