@@ -166,7 +166,7 @@ const LoginPage = ({ setIsLoggedIn, setUser, onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [role, setRole] = useState('user'); // State to track the selected role
   const navigate = useNavigate();
-  const BackendUrl=import.meta.env.VITE_BACKEND_URL;
+  const BackendUrl=import.meta.env.VITE_API_URL;
 
   const handleChange = (e) => {
     const { name, value } = e.target;

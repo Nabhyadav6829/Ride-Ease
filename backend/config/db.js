@@ -3,10 +3,7 @@ require('dotenv').config();
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/ride-booking-app', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    await mongoose.connect('mongodb://localhost:27017/ride-booking-app');
     console.log('MongoDB Connected...');
   } catch (err) {
     console.error(err.message);

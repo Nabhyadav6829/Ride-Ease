@@ -201,7 +201,7 @@ export default function SettingsPage({ isLoggedIn, user, onUserUpdate }) {
   };
 
   const handleDataExport = async () => {
-    const BackendUrl=import.meta.env.VITE_BACKEND_URL;
+    const BackendUrl=import.meta.env.VITE_API_URL;
     setIsExporting(true);
     try {
       // Simulate fetching previous rides from API
@@ -260,7 +260,7 @@ export default function SettingsPage({ isLoggedIn, user, onUserUpdate }) {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/users/delete', {
+      const response = await fetch(`${BackendUrl}/api/users/delete`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
