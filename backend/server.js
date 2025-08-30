@@ -56,7 +56,6 @@
 
 
 
-
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -76,34 +75,35 @@ const app = express();
 // --- CORS Configuration ---
 // A whitelist of allowed origins.
 const allowedOrigins = [
-  'https://ride-ease-six.vercel.app',
+  process.env.FRONTEND_URL || 'https://ride-ease-six.vercel.app', // Fallback to Vercel URL if env var is missing
   'http://localhost:3000', // Example for local development
   'http://localhost:5173', // Example for local Vite development
 ];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (like Postman) or if the origin is in the whitelist
+    // Log the origin for debugging
+    console.log(`Request Origin: ${origin}`);
+    // Allow requests with no origin (e.g., Postman) or if the origin is in the whitelist
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.error(`CORS blocked for origin: ${origin}`); // Log blocked origin for debugging
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error(`CORS blocked for origin: ${origin}`));
     }
   },
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'], // Explicitly list allowed methods
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
   credentials: true, // Allow cookies and authorization headers
   optionsSuccessStatus: 204, // Respond to preflight requests with 204
   allowedHeaders: ['Content-Type', 'Authorization'], // Explicitly allow necessary headers
 };
 
 // --- Middlewares ---
-// Apply CORS middleware before routes
+// Apply CORS middleware as the first middleware
 app.use(cors(corsOptions));
 
 app.use(express.json()); // To parse JSON bodies.
 
-// Serve static files from the 'uploads' directory
+// Serve static files from the 'Uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
 // --- Database Connection ---
