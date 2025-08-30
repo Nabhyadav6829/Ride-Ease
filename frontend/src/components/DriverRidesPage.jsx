@@ -109,16 +109,22 @@ export default function DriverRidesPage() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center space-x-3">
-          <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100">
-            <ArrowLeft className="h-6 w-6 text-gray-800" />
+      <main className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        {/* === START: APPLIED YOUR DESIGN === */}
+        <div className="flex items-center mb-6">
+          <button 
+            onClick={() => navigate(-1)} // Changed from handleGoHome to navigate(-1) to match original functionality
+            className="p-2 rounded-full hover:bg-gray-200 transition-colors mr-4"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-700" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">My Ride History</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
+            My <span className="text-emerald-600">Rides</span>
+          </h1>
         </div>
-      </header>
+        {/* === END: APPLIED YOUR DESIGN === */}
 
-      <main className="max-w-4xl mx-auto p-4">
         {/* Filter Section */}
         <div className="bg-white p-4 rounded-2xl shadow-md mb-6">
           <div className="flex items-center space-x-2 mb-4">

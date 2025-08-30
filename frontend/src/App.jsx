@@ -295,16 +295,20 @@ function AppContent() {
           }
         />
         <Route
-          path="/"
-          element={
+        path="/"
+        element={
+          isLoggedIn && localStorage.getItem('role') === 'driver' ? (
+            <Navigate to="/driver/home" replace />
+          ) : (
             <HomePage
               isLoggedIn={isLoggedIn}
               setIsLoggedIn={setIsLoggedIn}
               user={user}
               setUser={setUser}
             />
-          }
-        />
+          )
+        }
+      />
         <Route
           path="/logout"
           element={

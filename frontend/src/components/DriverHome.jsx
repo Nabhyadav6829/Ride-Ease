@@ -315,9 +315,14 @@ export default function DriverHomePage({ isLoggedIn }) {
       const pickupAddress = uniquePickups > 1 ? `Multiple Pickups (${uniquePickups})` : activeRide.passengers[0].pickup;
       const uniqueDrops = new Set(activeRide.passengers.map(p => p.drop)).size;
       const dropAddress = uniqueDrops > 1 ? `Multiple Drops (${uniqueDrops})` : activeRide.passengers[0].drop;
+      
+      // ======================= THIS IS THE CORRECTED SECTION =======================
+      // Determine rideType based on the actual number of stops, which is more robust.
+      const isMultiRide = uniquePickups > 1 || uniqueDrops > 1;
+
       const newRide = {
         _id: Date.now(),
-        rideType: activeRide.type === "multi-pickup" ? "multi" : "single",
+        rideType: isMultiRide ? "multi" : "single",
         pickups: [{ address: pickupAddress }],
         drops: [{ address: dropAddress }],
         fare: activeRide.fare,
@@ -325,22 +330,22 @@ export default function DriverHomePage({ isLoggedIn }) {
         passengers: activeRide.passengers.length,
         rating: 5
       };
+      // ======================= END OF CORRECTED SECTION =======================
+
       setRecentRides(prev => {
         const updatedRides = [newRide, ...prev];
         localStorage.setItem('recentRides', JSON.stringify(updatedRides));
         return updatedRides;
       });
 
-      // ======================= THIS IS THE CORRECTED SECTION =======================
       setDriverProfile(prev => {
         if (!prev) return prev; // Return previous state if no profile exists
 
-        // Ensure the current balance is treated as a number before adding to it.
         const currentBalance = parseFloat(prev.wallet?.balance || 0);
         const currentTotalEarnings = parseFloat(prev.wallet?.totalEarnings || 0);
 
         const updatedWallet = {
-          ...(prev.wallet || {}), // This line is fixed to prevent crash
+          ...(prev.wallet || {}),
           balance: currentBalance + earnedAmount,
           totalEarnings: currentTotalEarnings + earnedAmount,
         };
@@ -350,11 +355,9 @@ export default function DriverHomePage({ isLoggedIn }) {
           wallet: updatedWallet,
         };
 
-        // Save updated profile to localStorage to ensure balance persists
         localStorage.setItem('driverProfile', JSON.stringify(updatedProfile));
         return updatedProfile;
       });
-      // ======================= END OF CORRECTED SECTION =======================
 
       alert(`You earned ₹${earnedAmount}!`);
       handleCompleteRide(activeRide.id, activeRide.fare);
@@ -600,10 +603,12 @@ export default function DriverHomePage({ isLoggedIn }) {
           </div>
         )}
 
-        {activeRide && activeRide.type === 'multi-pickup' && (
+        {activeRide && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 border-l-4 border-l-emerald-500">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Active Multi-Location Ride</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                {activeRide.type === 'multi-pickup' ? 'Active Multi-Location Ride' : 'Active Ride'}
+              </h3>
               <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-semibold">
                 STOP {activeRide.currentStop + 1}/{activeRide.totalStops}
               </span>

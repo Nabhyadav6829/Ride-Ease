@@ -120,7 +120,7 @@ export default function BookedPage() {
                                             <div>
                                                 <p className="text-xl font-semibold text-emerald-800">✅ Arrived</p>
                                                 <p className="mt-2 text-md text-gray-700">
-                                                    You will be at your destination in approximately <strong>{destinationTime} minutes</strong>.
+                                                    You will be at your destination shortly.
                                                 </p>
                                             </div>
                                         ) : (
@@ -140,7 +140,7 @@ export default function BookedPage() {
                                             <div className="flex flex-col justify-between h-full py-1 w-full">
                                                 <p className="font-semibold text-gray-800 truncate">{pickups[0]}</p>
                                                 <div className="flex-grow"></div>
-                                                <p className="font-semibold text-gray-800 truncate">{drops[drops.length - 1]}</p>
+                                                <p className="font-semibold text-gray-800 mt-7 truncate">{drops[drops.length - 1]}</p>
                                             </div>
                                         </div>
                                     </div>

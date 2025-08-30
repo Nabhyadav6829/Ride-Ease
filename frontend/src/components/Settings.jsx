@@ -531,7 +531,13 @@ export default function SettingsPage({ isLoggedIn, user, onUserUpdate }) {
                 </div>
                 <select
                   value={displaySettings.theme}
-                  onChange={(e) => handleDisplayChange('theme', e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value === 'dark') {
+                      alert('Dark mode is coming soon!');
+                    } else {
+                      handleDisplayChange('theme', e.target.value);
+                    }
+                  }}
                   className="px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900"
                 >
                   <option value="light">Light</option>

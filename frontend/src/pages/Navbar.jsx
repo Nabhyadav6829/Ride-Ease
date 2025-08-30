@@ -7,7 +7,7 @@ export default function Navbar({ user }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
 
-  const navLinks = ['Home', 'Features', 'Partner', 'Contact'];
+  const navLinks = ['Home', 'Partner', 'Contact'];
 
   const handleLogout = () => {
     navigate('/logout');
@@ -82,9 +82,8 @@ export default function Navbar({ user }) {
                 </div>
 
                 <div
-                  className={`absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-50 transition-all duration-200 ${
-                    showDropdown ? 'opacity-100 visible' : 'opacity-0 invisible'
-                  }`}
+                  className={`absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-50 transition-all duration-200 ${showDropdown ? 'opacity-100 visible' : 'opacity-0 invisible'
+                    }`}
                 >
                   <div className="px-4 py-2 border-b">
                     <p className="text-sm text-gray-500">Signed in as</p>
