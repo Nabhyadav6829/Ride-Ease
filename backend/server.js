@@ -79,6 +79,7 @@ const app = express();
 // A whitelist of allowed origins.
 const allowedOrigins = [
   'https://ride-ease-six.vercel.app',
+  'https://ride-ease-six.vercel.app/',
   'http://localhost:3000', // Example for local development
   'http://localhost:5173', // Example for local Vite development
 ];
