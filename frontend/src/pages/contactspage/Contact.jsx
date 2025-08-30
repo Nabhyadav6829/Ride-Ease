@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
 import emailjs from 'emailjs-com';
+
+
+const service_ID = import.meta.env.VITE_SERVICE_ID;
+const template_ID = import.meta.env.VITE_TEMPLATE_ID;
+const public_KEY=import.meta.env.VITE_PUBLIC_KEY;
+
 import {
   Phone, Mail, MapPin, Clock, Users, MessageSquare,
   Twitter, Linkedin, Facebook, Instagram
@@ -28,10 +34,10 @@ export default function Contact() {
     setIsLoading(true);
 
     emailjs.sendForm(
-      'service_a00dheg',  // Your Service ID
-      'template_22gfvci', // Your Template ID
+      service_ID,  // Your Service ID
+      template_ID, // Your Template ID
       e.target,           // The form element
-      'iICrVezhwGYgciHCg'   // Your Public Key
+      public_KEY   // Your Public Key
     ).then((result) => {
         console.log('SUCCESS!', result.text);
         alert('Thank you for your message! It has been sent successfully.');
