@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePages/HomePage';
@@ -21,8 +20,8 @@ import DriverProfilePage from './pages/Profile/DriverProfilePage';
 import EarningsPage from './pages/StaticPages/EarningsPage';
 import DriverContactPage from './pages/contactspage/DriverContactPage';
 import DriverSettingsPage from './pages/SettingsPages/DriverSettings';
-
-// NOTE: You have not provided a DriverLoginPage component, so its route is commented out below.
+import PaymentPage from './pages/Payment/PaymentPage';
+import LiveRidePage from './pages/BookingPages/LiveRidePage';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -34,7 +33,6 @@ function AppContent() {
   const [isRideActive, setIsRideActive] = useState(false);
   const [rideDetails, setRideDetails] = useState(null);
 
-  // ++ CHANGE 1: Navbar hide condition updated (hide for ALL /driver/* paths) ++
   const shouldHideNavbar =
     location.pathname.startsWith('/driver') || location.pathname === '/logout';
 
@@ -261,7 +259,6 @@ function AppContent() {
 
   return (
     <div style={{ paddingBottom: isRideActive ? '120px' : '0' }}>
-      {/* ++ CHANGE 2: Use shouldHideNavbar condition ++ */}
       {!shouldHideNavbar && (
         <Navbar user={user} isLoggedIn={isLoggedIn} onLogout={handleLogout} />
       )}
@@ -295,20 +292,20 @@ function AppContent() {
           }
         />
         <Route
-        path="/"
-        element={
-          isLoggedIn && localStorage.getItem('role') === 'driver' ? (
-            <Navigate to="/driver/home" replace />
-          ) : (
-            <HomePage
-              isLoggedIn={isLoggedIn}
-              setIsLoggedIn={setIsLoggedIn}
-              user={user}
-              setUser={setUser}
-            />
-          )
-        }
-      />
+          path="/"
+          element={
+            isLoggedIn && localStorage.getItem('role') === 'driver' ? (
+              <Navigate to="/driver/home" replace />
+            ) : (
+              <HomePage
+                isLoggedIn={isLoggedIn}
+                setIsLoggedIn={setIsLoggedIn}
+                user={user}
+                setUser={setUser}
+              />
+            )
+          }
+        />
         <Route
           path="/logout"
           element={
@@ -347,7 +344,9 @@ function AppContent() {
             )
           }
         />
+        <Route path="/ride/live/:rideId" element={<LiveRidePage />} />
         <Route path="/booked" element={<BookedPage onRideStart={handleStartRide} />} />
+        <Route path="/payment" element={<PaymentPage />} />
         <Route
           path="/my-rides"
           element={
@@ -358,8 +357,6 @@ function AppContent() {
             )
           }
         />
-
-        {/* Driver Routes */}
         <Route path="/driver/home" element={<DriverHomePage isLoggedIn={true} />} />
         <Route path="/driver/settings" element={<DriverSettingsPage isLoggedIn={true} />} />
         {/* <Route path="/driver/login" element={<DriverLoginPage />} /> */}
@@ -374,7 +371,17 @@ function AppContent() {
         />
         <Route
           path="/driver/profile"
-          element={isLoggedIn ? <DriverProfilePage /> : <Navigate to="/driver/login" />}
+          element={
+            isLoggedIn && user ? (
+              <DriverProfilePage
+                isLoggedIn={isLoggedIn}
+                user={user}
+                onUserUpdate={handleUserUpdate}
+              />
+            ) : (
+              <Navigate to="/driver/login" />
+            )
+          }
         />
         <Route
           path="/driver/contact"

@@ -17,11 +17,13 @@
     "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.537.0",
+    "razorpay": "^2.9.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.7.1",
-    "recharts": "^3.1.2"
+    "recharts": "^3.1.2",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

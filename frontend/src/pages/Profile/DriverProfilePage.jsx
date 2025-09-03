@@ -1,70 +1,257 @@
-// src/components/DriverProfilePage.jsx
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Star, ShieldCheck, Car, FileText, Bell, LogOut, ChevronRight, Edit } from 'lucide-react';
+import { 
+  ArrowLeft, Star, Car, FileText, LogOut, ChevronRight, Edit,
+  User, Mail, Home, KeyRound, Shield, Save, X, UserRound,
+  Bell, Settings, CreditCard
+} from 'lucide-react';
+import axios from 'axios';
+import DriverNavbar from '../../components/DriverNavbar';
+import DriverBottomNav from '../../components/DriverBottomNav';
 
-// This mock data now simulates what you would get from your database via an API call.
-const mockApiResponse = {
-  name: 'Rohan Kumar', // This name would come from your database
-  rating: 4.9,
-  level: 'Multi-Location Expert',
-  avatarUrl: 'https://via.placeholder.com/150',
-  vehicle: {
-    model: 'Maruti Suzuki Dzire',
-    licensePlate: 'UP 14 AB 1234',
-    color: 'White',
-  },
-  documents: {
-    drivingLicense: 'Verified',
-    vehicleRegistration: 'Verified',
-    insurance: 'Expires in 3 months',
-    permit: 'Verified',
-  },
-  settings: {
-    email: 'rohan.k@example.com',
-    phone: '+91 98******56',
-  }
+// Helper for API calls
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  return {
+    headers: { Authorization: `Bearer ${token}` }
+  };
 };
 
-
-export default function ProfilePage() {
-  // --- CHANGE 1: Initialize profile state to null and add a loading state ---
+export default function DriverProfilePage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState(null);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // --- CHANGE 2: Fetch data from a simulated API when the component mounts ---
+  // Password change modal state
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwords, setPasswords] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+
+  // Privacy settings modal state
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [privacySettings, setPrivacySettings] = useState({
+    showDetails: true,
+    allowAutoRequests: true,
+    showOnlineStatus: false,
+  });
+
+  // Notification settings modal state
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [notifications, setNotifications] = useState({
+    push: true,
+    email: false,
+    sms: true,
+    bookingAlerts: true,
+    paymentAlerts: true,
+  });
+
+  // Image upload state
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // Fetch real profile data from the backend
   useEffect(() => {
-    // This function simulates fetching data from your database.
     const fetchProfileData = async () => {
+      const authHeaders = getAuthHeaders();
+      if (!authHeaders) {
+        navigate('/driver/login');
+        return;
+      }
       try {
-        // In a real app, you would use fetch() or axios to call your API endpoint
-        // For example: const response = await fetch('/api/driver/profile');
-        // const data = await response.json();
-
-        // We are simulating the API call with a 1-second delay
-        setTimeout(() => {
-          setProfile(mockApiResponse); // Set the profile with data from the "database"
-          setLoading(false); // Stop loading
-        }, 1000);
-
+        const BackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const { data } = await axios.get(`${BackendUrl}/api/drivers/profile`, authHeaders);
+        setProfile(data);
+        setFormData({
+          name: data.name,
+          email: data.email,
+          phone: data.phone || '',
+          address: data.address || '',
+          vehicleDetails: data.vehicleDetails || '',
+          licenseNumber: data.licenseNumber || '',
+        });
       } catch (error) {
         console.error("Failed to fetch profile:", error);
-        setLoading(false); // Stop loading even if there is an error
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProfileData();
-  }, []); // The empty array [] ensures this effect runs only once
+  }, [navigate]);
+
+  const getAvatarUrl = () => {
+    if (!profile?.profilePicture || profile.profilePicture === 'no-photo.jpg') {
+      return null;
+    }
+    const BackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return `${BackendUrl}/Uploads/${profile.profilePicture}`;
+  };
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle edit mode
+  const handleEdit = () => {
+    setError('');
+    setIsEditing(true);
+  };
+
+  // Handle cancel edit
+  const handleCancel = () => {
+    setError('');
+    setFormData({
+      name: profile.name,
+      email: profile.email,
+      phone: profile.phone || '',
+      address: profile.address || '',
+      vehicleDetails: profile.vehicleDetails || '',
+      licenseNumber: profile.licenseNumber || '',
+    });
+    setIsEditing(false);
+  };
+
+  // Handle save profile changes
+  const handleSave = async () => {
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const authHeaders = getAuthHeaders();
+      if (!authHeaders) {
+        setError("You are not authorized. Please log in again.");
+        setIsLoading(false);
+        return;
+      }
+
+      const BackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const { data } = await axios.put(`${BackendUrl}/api/drivers/profile`, formData, authHeaders);
+
+      alert('Profile updated successfully!');
+      setProfile({ ...profile, ...data });
+      setIsEditing(false);
+
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle password change
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswords(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+
+    if (passwords.newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters long.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const authHeaders = getAuthHeaders();
+      const BackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      
+      await axios.put(`${BackendUrl}/api/drivers/change-password`, {
+        oldPassword: passwords.oldPassword,
+        newPassword: passwords.newPassword,
+      }, authHeaders);
+
+      setPasswordSuccess('Password changed successfully!');
+      setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => {
+        setIsPasswordModalOpen(false);
+        setPasswordSuccess('');
+      }, 2000);
+
+    } catch (err) {
+      setPasswordError(err.response?.data?.message || 'Failed to change password.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle privacy settings toggle
+  const handlePrivacyToggle = (key) => {
+    setPrivacySettings(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // Handle notification settings toggle
+  const handleNotificationToggle = (key) => {
+    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // Handle image upload
+  const handleImageUpload = async (fileToUpload) => {
+    setError('');
+    setIsLoading(true);
+    const uploadFormData = new FormData();
+    uploadFormData.append('avatar', fileToUpload);
+
+    try {
+      const authHeaders = getAuthHeaders();
+      if (!authHeaders) {
+        throw new Error("You are not authorized. Please log in again.");
+      }
+
+      const BackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const { data } = await axios.put(`${BackendUrl}/api/drivers/upload-avatar`, uploadFormData, {
+        headers: {
+          ...authHeaders.headers,
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+
+      setProfile({ ...profile, profilePicture: data.profilePicture });
+      alert('Avatar updated successfully!');
+      setImagePreview(null);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload image.');
+    } finally {
+      setIsLoading(false);
+      if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+      handleImageUpload(file);
+    }
+  };
 
   const handleLogout = () => {
-    // Clear user session/token
-    console.log('Logging out...');
-    navigate('/driver/login');
+    localStorage.removeItem('token');
+    navigate('/driver/logout');
   };
-  
-  // --- CHANGE 3: Show a loading indicator while fetching data ---
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -73,126 +260,475 @@ export default function ProfilePage() {
     );
   }
 
-  // If there's no profile data after loading, show an error.
-  if (!profile) {
+  if (!profile || !formData) {
     return (
-       <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen">
         <p className="text-xl font-semibold text-red-500">Could not load profile.</p>
       </div>
-    )
+    );
   }
 
-  // --- NO OTHER CHANGES BELOW THIS LINE ---
   return (
-    <div className="bg-gray-100 min-h-screen pb-20">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center space-x-3">
-          <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-gray-100">
-            <ArrowLeft className="h-6 w-6 text-gray-700" />
-          </button>
-          <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
-        </div>
-      </header>
+    <>
+      <DriverNavbar />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50 pt-20 px-4 sm:px-6 lg:px-8 pb-20">
+        {/* Header */}
+        <header className="bg-white shadow-sm sticky top-0 z-10 -mt-20 mb-8">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center space-x-3">
+            <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-gray-100">
+              <ArrowLeft className="h-6 w-6 text-gray-700" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
+          </div>
+        </header>
 
-      <main className="max-w-7xl mx-auto p-4">
-        {/* Profile Header Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 flex items-center space-x-5">
-          <img
-            src={profile.avatarUrl}
-            alt={profile.name}
-            className="w-20 h-20 rounded-full border-4 border-emerald-200"
-          />
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{profile.name}</h2>
-            <div className="flex items-center mt-1 text-sm text-gray-600">
+        <div className="max-w-6xl mx-auto">
+          {/* Profile Header */}
+          <div className="text-center mb-12">
+            <div className="relative w-32 h-32 rounded-full mx-auto mb-4 border-4 border-emerald-500 shadow-lg flex items-center justify-center bg-gray-200">
+              {imagePreview || getAvatarUrl() ? (
+                <img
+                  src={imagePreview || getAvatarUrl()}
+                  alt={profile.name}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <UserRound className="w-16 h-16 text-gray-400" />
+              )}
+              {isLoading && (
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex justify-center items-center rounded-full">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                className="hidden"
+                disabled={isLoading}
+              />
+              <button
+                onClick={() => fileInputRef.current.click()}
+                disabled={isLoading}
+                className="absolute bottom-0 right-0 bg-emerald-500 text-white rounded-full p-2 shadow-md hover:bg-emerald-600 transition-colors disabled:bg-gray-400"
+                aria-label="Change profile picture"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <h1 className="text-4xl font-bold text-gray-900">{profile.name}</h1>
+            <div className="flex items-center justify-center mt-2 text-sm text-gray-600">
               <Star className="h-4 w-4 text-yellow-500 fill-current mr-1" />
-              <span className="font-semibold">{profile.rating}</span>
+              <span className="font-semibold">4.9</span>
               <span className="mx-2">|</span>
-              <span>{profile.level}</span>
+              <span className={`font-semibold ${profile.isVerified ? 'text-green-600' : 'text-orange-600'}`}>
+                {profile.isVerified ? 'Verified Driver' : 'Pending Verification'}
+              </span>
             </div>
+            <p className="text-md text-gray-600 mt-1">
+              Driver since {new Date(profile.createdAt || Date.now()).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+            </p>
           </div>
-          <button className="ml-auto p-2 rounded-lg hover:bg-gray-100">
-            <Edit className="h-5 w-5 text-gray-500" />
-          </button>
-        </div>
 
-        {/* Vehicle Information */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <Car className="h-6 w-6 text-emerald-600" />
-            <h3 className="text-lg font-bold text-gray-900">Vehicle Information</h3>
-          </div>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-500">Model</span>
-              <span className="font-semibold text-gray-800">{profile.vehicle.model}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-500">License Plate</span>
-              <span className="font-semibold text-gray-800 bg-gray-100 px-2 py-1 rounded">{profile.vehicle.licensePlate}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-500">Color</span>
-              <span className="font-semibold text-gray-800">{profile.vehicle.color}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Documents */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <FileText className="h-6 w-6 text-emerald-600" />
-            <h3 className="text-lg font-bold text-gray-900">Documents</h3>
-          </div>
-          <div className="space-y-3">
-            {Object.entries(profile.documents).map(([key, value]) => (
-              <div key={key} className="flex justify-between items-center">
-                <span className="text-gray-500 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                <span className={`font-semibold text-sm ${value === 'Verified' ? 'text-green-600' : 'text-orange-600'}`}>
-                  {value}
-                </span>
+          <div className="max-w-3xl mx-auto space-y-8">
+            {/* Personal Information */}
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">Personal Information</h3>
+                {isEditing ? (
+                  <div className="flex items-center gap-4">
+                    <button onClick={handleSave} disabled={isLoading} className="text-emerald-600 hover:text-emerald-800 transition flex items-center gap-2 text-sm font-semibold disabled:opacity-50">
+                      <Save className="h-4 w-4" /> {isLoading ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={handleCancel} disabled={isLoading} className="text-red-500 hover:text-red-700 transition flex items-center gap-2 text-sm font-semibold disabled:opacity-50">
+                      <X className="h-4 w-4" /> Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={handleEdit} className="text-emerald-600 hover:text-emerald-800 transition flex items-center gap-2 text-sm font-semibold">
+                    <Edit className="h-4 w-4" /> Edit
+                  </button>
+                )}
               </div>
-            ))}
-          </div>
-          <button className="w-full mt-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors">
-            Update Documents
-          </button>
-        </div>
-        
-        {/* Account Settings & Links */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Account Settings</h3>
-            <div className="divide-y divide-gray-100">
-                <button className="w-full flex items-center justify-between py-4 text-left">
-                    <span className="text-gray-800">Edit Personal Info</span>
-                    <ChevronRight className="h-5 w-5 text-gray-400"/>
-                </button>
-                <button className="w-full flex items-center justify-between py-4 text-left">
-                    <span className="text-gray-800">Manage Bank Account</span>
-                    <ChevronRight className="h-5 w-5 text-gray-400"/>
-                </button>
-                <button className="w-full flex items-center justify-between py-4 text-left">
-                    <span className="text-gray-800">Notifications</span>
-                    <ChevronRight className="h-5 w-5 text-gray-400"/>
-                </button>
-                 <button className="w-full flex items-center justify-between py-4 text-left">
-                    <span className="text-gray-800">Safety Center</span>
-                    <ChevronRight className="h-5 w-5 text-gray-400"/>
-                </button>
-            </div>
-        </div>
+              
+              {error && <div className="text-red-500 bg-red-100 p-3 rounded-md mb-4">{error}</div>}
 
-        {/* Logout Button */}
-        <div className="mt-8">
-            <button
+              {isEditing ? (
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <User className="h-5 w-5 text-emerald-500 mr-4" />
+                    <input 
+                      type="text" 
+                      name="name" 
+                      value={formData.name} 
+                      onChange={handleInputChange} 
+                      className="w-full p-2 border border-gray-300 rounded-md" 
+                      placeholder="Full Name"
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <Mail className="h-5 w-5 text-emerald-500 mr-4" />
+                    <input 
+                      type="email" 
+                      name="email" 
+                      value={formData.email} 
+                      readOnly 
+                      className="w-full p-2 border border-gray-300 rounded-md bg-gray-100" 
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <svg className="h-5 w-5 text-emerald-500 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    <input 
+                      type="tel" 
+                      name="phone" 
+                      value={formData.phone} 
+                      onChange={handleInputChange} 
+                      className="w-full p-2 border border-gray-300 rounded-md" 
+                      placeholder="Phone Number"
+                    />
+                  </div>
+                  <div className="flex items-start">
+                    <Home className="h-5 w-5 text-emerald-500 mr-4 mt-2 flex-shrink-0" />
+                    <textarea 
+                      name="address" 
+                      value={formData.address} 
+                      onChange={handleInputChange} 
+                      rows="3" 
+                      placeholder="Enter your full address" 
+                      className="w-full p-2 border border-gray-300 rounded-md" 
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center text-gray-700">
+                    <User className="h-5 w-5 text-emerald-500 mr-4" />
+                    <span>{profile.name}</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <Mail className="h-5 w-5 text-emerald-500 mr-4" />
+                    <span>{profile.email}</span>
+                  </div>
+                  <div className="flex items-center text-gray-700">
+                    <svg className="h-5 w-5 text-emerald-500 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    <span>{profile.phone || 'Not provided'}</span>
+                  </div>
+                  <div className="flex items-start text-gray-700">
+                    <Home className="h-5 w-5 text-emerald-500 mr-4 mt-1 flex-shrink-0" />
+                    <span className="whitespace-pre-wrap">{profile.address || 'Not provided'}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Vehicle Information */}
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <div className="flex items-center space-x-3 mb-6">
+                <Car className="h-6 w-6 text-emerald-600" />
+                <h3 className="text-2xl font-bold text-gray-900">Vehicle Information</h3>
+              </div>
+              
+              {isEditing ? (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Vehicle Details</span>
+                    <input 
+                      type="text" 
+                      name="vehicleDetails" 
+                      value={formData.vehicleDetails} 
+                      onChange={handleInputChange} 
+                      className="p-2 border border-gray-300 rounded-md" 
+                      placeholder="e.g., Honda City 2020"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">License Plate</span>
+                    <input 
+                      type="text" 
+                      name="licenseNumber" 
+                      value={formData.licenseNumber} 
+                      onChange={handleInputChange} 
+                      className="p-2 border border-gray-300 rounded-md bg-gray-100" 
+                      readOnly
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Vehicle Details</span>
+                    <span className="font-semibold text-gray-800">{profile.vehicleDetails || 'Not set'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">License Plate</span>
+                    <span className="font-semibold text-gray-800 bg-gray-100 px-2 py-1 rounded">{profile.licenseNumber}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Documents */}
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <div className="flex items-center space-x-3 mb-6">
+                <FileText className="h-6 w-6 text-emerald-600" />
+                <h3 className="text-2xl font-bold text-gray-900">Documents</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Verification Status</span>
+                  <span className={`font-semibold text-sm ${profile.isVerified ? 'text-green-600' : 'text-orange-600'}`}>
+                    {profile.isVerified ? 'Verified' : 'Pending Verification'}
+                  </span>
+                </div>
+              </div>
+              <button className="w-full mt-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+                Update Documents
+              </button>
+            </div>
+
+            {/* Account Settings */}
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">Account Settings</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-gray-700">
+                  <div className="flex items-center">
+                    <KeyRound className="h-5 w-5 text-emerald-500 mr-4" />
+                    <span>Change Password</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsPasswordModalOpen(true);
+                      setPasswordError('');
+                      setPasswordSuccess('');
+                    }}
+                    className="text-sm font-semibold text-emerald-600"
+                  >
+                    Change
+                  </button>
+                </div>
+                <div className="flex justify-between items-center text-gray-700">
+                  <div className="flex items-center">
+                    <Shield className="h-5 w-5 text-emerald-500 mr-4" />
+                    <span>Privacy Settings</span>
+                  </div>
+                  <button onClick={() => setIsPrivacyModalOpen(true)} className="text-sm font-semibold text-emerald-600">
+                    Manage
+                  </button>
+                </div>
+                <div className="flex justify-between items-center text-gray-700">
+                  <div className="flex items-center">
+                    <Bell className="h-5 w-5 text-emerald-500 mr-4" />
+                    <span>Notifications</span>
+                  </div>
+                  <button onClick={() => setIsNotificationModalOpen(true)} className="text-sm font-semibold text-emerald-600">
+                    Manage
+                  </button>
+                </div>
+                <div className="flex justify-between items-center text-gray-700">
+                  <div className="flex items-center">
+                    <CreditCard className="h-5 w-5 text-emerald-500 mr-4" />
+                    <span>Manage Bank Account</span>
+                  </div>
+                  <button className="text-sm font-semibold text-emerald-600">
+                    Update
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Logout Button */}
+            <div className="mt-8 ">
+              <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center space-x-2 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg"
-            >
+                className="w-full flex mb-5 items-center justify-center space-x-2 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg"
+              >
                 <LogOut className="h-5 w-5" />
                 <span>Log Out</span>
-            </button>
+              </button>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </div>
+
+      {/* Password Change Modal */}
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h3 className="text-2xl font-bold mb-4">Change Password</h3>
+            <form onSubmit={handlePasswordChange}>
+              {passwordError && <p className="text-red-500 bg-red-100 p-2 rounded-md mb-4">{passwordError}</p>}
+              {passwordSuccess && <p className="text-green-500 bg-green-100 p-2 rounded-md mb-4">{passwordSuccess}</p>}
+              <div className="space-y-4">
+                <input
+                  type="password" 
+                  name="oldPassword" 
+                  placeholder="Current Password"
+                  value={passwords.oldPassword} 
+                  onChange={handlePasswordInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-md" 
+                  required
+                />
+                <input
+                  type="password" 
+                  name="newPassword" 
+                  placeholder="New Password"
+                  value={passwords.newPassword} 
+                  onChange={handlePasswordInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-md" 
+                  required
+                />
+                <input
+                  type="password" 
+                  name="confirmPassword" 
+                  placeholder="Confirm New Password"
+                  value={passwords.confirmPassword} 
+                  onChange={handlePasswordInputChange}
+                  className="w-full p-2 border border-gray-300 rounded-md" 
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-4 mt-6">
+                <button 
+                  type="button" 
+                  onClick={() => setIsPasswordModalOpen(false)} 
+                  disabled={isLoading} 
+                  className="px-4 py-2 bg-gray-200 rounded-md font-semibold hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isLoading} 
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 disabled:bg-emerald-300"
+                >
+                  {isLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Privacy Settings Modal */}
+      {isPrivacyModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h3 className="text-2xl font-bold mb-6">Privacy Settings</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-gray-700">Show my details to riders</label>
+                <button 
+                  onClick={() => handlePrivacyToggle('showDetails')} 
+                  className={`${privacySettings.showDetails ? 'bg-emerald-600' : 'bg-gray-200'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors`}
+                >
+                  <span className={`${privacySettings.showDetails ? 'translate-x-6' : 'translate-x-1'} inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                </button>
+              </div>
+              <div className="flex justify-between items-center">
+                <label className="text-gray-700">Allow Auto Ride Requests</label>
+                <button 
+                  onClick={() => handlePrivacyToggle('allowAutoRequests')} 
+                  className={`${privacySettings.allowAutoRequests ? 'bg-emerald-600' : 'bg-gray-200'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors`}
+                >
+                  <span className={`${privacySettings.allowAutoRequests ? 'translate-x-6' : 'translate-x-1'} inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                </button>
+              </div>
+              <div className="flex justify-between items-center">
+                <label className="text-gray-700">Show online status</label>
+                <button 
+                  onClick={() => handlePrivacyToggle('showOnlineStatus')} 
+                  className={`${privacySettings.showOnlineStatus ? 'bg-emerald-600' : 'bg-gray-200'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors`}
+                >
+                  <span className={`${privacySettings.showOnlineStatus ? 'translate-x-6' : 'translate-x-1'} inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-end gap-4 mt-8">
+              <button
+                type="button"
+                onClick={() => setIsPrivacyModalOpen(false)}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Settings Modal */}
+      {isNotificationModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h3 className="text-2xl font-bold mb-6">Notification Settings</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-gray-700">Push Notifications</label>
+                <button 
+                  onClick={() => handleNotificationToggle('push')} 
+                  className={`${notifications.push ? 'bg-emerald-600' : 'bg-gray-200'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors`}
+                >
+                  <span className={`${notifications.push ? 'translate-x-6' : 'translate-x-1'} inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                </button>
+              </div>
+              <div className="flex justify-between items-center">
+                <label className="text-gray-700">Email Notifications</label>
+                <button 
+                  onClick={() => handleNotificationToggle('email')} 
+                  className={`${notifications.email ? 'bg-emerald-600' : 'bg-gray-200'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors`}
+                >
+                  <span className={`${notifications.email ? 'translate-x-6' : 'translate-x-1'} inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                </button>
+              </div>
+              <div className="flex justify-between items-center">
+                <label className="text-gray-700">SMS Notifications</label>
+                <button 
+                  onClick={() => handleNotificationToggle('sms')} 
+                  className={`${notifications.sms ? 'bg-emerald-600' : 'bg-gray-200'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors`}
+                >
+                  <span className={`${notifications.sms ? 'translate-x-6' : 'translate-x-1'} inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                </button>
+              </div>
+              <div className="flex justify-between items-center">
+                <label className="text-gray-700">Booking Alerts</label>
+                <button 
+                  onClick={() => handleNotificationToggle('bookingAlerts')} 
+                  className={`${notifications.bookingAlerts ? 'bg-emerald-600' : 'bg-gray-200'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors`}
+                >
+                  <span className={`${notifications.bookingAlerts ? 'translate-x-6' : 'translate-x-1'} inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                </button>
+              </div>
+              <div className="flex justify-between items-center">
+                <label className="text-gray-700">Payment Alerts</label>
+                <button 
+                  onClick={() => handleNotificationToggle('paymentAlerts')} 
+                  className={`${notifications.paymentAlerts ? 'bg-emerald-600' : 'bg-gray-200'} relative inline-flex items-center h-6 rounded-full w-11 transition-colors`}
+                >
+                  <span className={`${notifications.paymentAlerts ? 'translate-x-6' : 'translate-x-1'} inline-block w-4 h-4 transform bg-white rounded-full transition-transform`} />
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-end gap-4 mt-8">
+              <button
+                type="button"
+                onClick={() => setIsNotificationModalOpen(false)}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bottom Navigation */}
+      <DriverBottomNav />
+    </>
   );
 }

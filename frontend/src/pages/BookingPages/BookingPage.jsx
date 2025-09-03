@@ -457,8 +457,6 @@
 // }
 
 
-
-
 // BookingPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -813,9 +811,16 @@ export default function BookingPage() {
             alert("Please select a vehicle to continue.");
             return;
         }
+        const names = ['Ramesh Kumar', 'Alice Singh', 'Bob Builder', 'Kalu Lala', 'Mike'];
+        const randomName = names[Math.floor(Math.random() * names.length)];
+        const randomPlate = `DL${Math.floor(Math.random() * 90 + 10)}AB${Math.floor(Math.random() * 9000 + 1000)}`;
+        const randomRating = (Math.random() * 1 + 4).toFixed(1);
+        const driverData = { name: randomName, plate: randomPlate, rating: randomRating };
+        const arrivalMinutes = Math.floor(Math.random() * 3) + 1;
+        const destMinutes = Math.floor(Math.random() * 11) + 5;
 
         setVehicleSelectionVisible(false);
-        navigate('/booked', {
+        navigate('/payment', {
             state: {
                 selectedVehicle: {
                     id: selectedVehicle.id,
@@ -824,7 +829,10 @@ export default function BookingPage() {
                     price: selectedVehicle.price
                 },
                 pickups: pickups.map(p => p.value).filter(p => p && p !== 'Fetching your location...'),
-                drops: drops.map(d => d.value).filter(Boolean)
+                drops: drops.map(d => d.value).filter(Boolean),
+                driver: driverData,
+                arrivalTime: arrivalMinutes,
+                destinationTime: destMinutes
             }
         });
     };

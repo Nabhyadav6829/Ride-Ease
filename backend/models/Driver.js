@@ -1,4 +1,4 @@
-//Driver.js
+// models/Driver.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -29,6 +29,10 @@ const driverSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+  },
+  profilePicture: { // Added for driver avatar
+    type: String,
+    default: 'no-photo.jpg',
   },
   vehicleDetails: {
     type: String,

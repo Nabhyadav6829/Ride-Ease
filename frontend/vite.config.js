@@ -18,10 +18,9 @@ export default defineConfig({
       },
       '/ors-api': {
         target: 'https://api.openrouteservice.org',
-        changeOrigin: true, // Needed for virtual hosted sites
-        rewrite: (path) => path.replace(/^\/ors-api/, ''), // Remove the prefix
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/ors-api/, ''),
       },
-
     }
   }
 })

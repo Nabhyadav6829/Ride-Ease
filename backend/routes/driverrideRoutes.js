@@ -1,11 +1,11 @@
+// routes/driverrideRoutes.js
 const express = require('express');
 const router = express.Router();
-const { completeRide } = require('../controllers/driverRideController');
-const { protectDriver } = require('../middleware/authMiddleware');
+const { protectDriver } = require('../middleware/authMiddleware'); // Ensure this exists
+const { getDriverRides, completeRide, logCompletedMockRide } = require('../controllers/driverRideController');
 
-// Route to complete a ride. It's protected to ensure only the
-// assigned driver can mark it as complete.
-// The ':id' is the ID of the ride to be completed.
-router.post('/:id/complete', protectDriver, completeRide);
+router.route('/').get(protectDriver, getDriverRides);
+router.route('/log-mock-ride').post(protectDriver, logCompletedMockRide);
+router.route('/:id/complete').post(protectDriver, completeRide);
 
 module.exports = router;

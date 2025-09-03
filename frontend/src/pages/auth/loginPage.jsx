@@ -1,158 +1,3 @@
-// import React, { useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
-
-// const LoginPage = ({ setIsLoggedIn }) => {
-//   const [formData, setFormData] = useState({ email: '', password: '' });
-//   const [errors, setErrors] = useState({});
-//   const navigate = useNavigate();
-
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData((prev) => ({ ...prev, [name]: value }));
-//   };
-
-//   const validateForm = () => {
-//     let tempErrors = {};
-//     if (!formData.email) {
-//       tempErrors.email = 'Email is required';
-//     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-//       tempErrors.email = 'Email is invalid';
-//     }
-//     if (!formData.password) {
-//       tempErrors.password = 'Password is required';
-//     } else if (formData.password.length < 6) {
-//       tempErrors.password = 'Password must be at least 6 characters';
-//     }
-//     setErrors(tempErrors);
-//     return Object.keys(tempErrors).length === 0;
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     if (validateForm()) {
-//       try {
-//         const res = await fetch('http://localhost:5000/api/users/login', {
-//           method: 'POST',
-//           headers: { 'Content-Type': 'application/json' },
-//           body: JSON.stringify(formData),
-//         });
-//         const data = await res.json();
-//         if (res.ok) {
-//           localStorage.setItem('token', data.token);
-//           setIsLoggedIn(true);
-//           navigate('/');
-//         } else {
-//           setErrors({ submit: data.message || 'Invalid credentials' });
-//         }
-//       } catch (err) {
-//         setErrors({ submit: 'Login failed. Please try again.' });
-//       }
-//     }
-//   };
-
-//   return (
-//     <div className="flex min-h-screen items-center justify-center bg-[#f4f9fd]">
-//       <div className="flex w-[900px] bg-white rounded-xl shadow-lg overflow-hidden">
-//         {/* Left Illustration */}
-//         <div className="w-1/2 bg-[#f4f9fd] flex items-center justify-center p-6">
-//           <img src="/illustration.png" alt="Illustration" className="max-h-[300px]" />
-//         </div>
-
-//         {/* Right Login Form */}
-//         <div className="w-1/2 p-10">
-//           <h2 className="text-2xl font-semibold text-gray-700 text-center mb-1">
-//             Welcome Back :)
-//           </h2>
-//           <p className="text-sm text-gray-500 text-center mb-6">
-//             To keep connected with us please login with your personal info
-//           </p>
-
-//           <form onSubmit={handleSubmit} className="space-y-5">
-//             {/* Email */}
-//             <div>
-//               <input
-//                 type="email"
-//                 name="email"
-//                 placeholder="Email Address"
-//                 value={formData.email}
-//                 onChange={handleChange}
-//                 className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-//                   errors.email ? 'border-red-500' : 'border-gray-300'
-//                 }`}
-//               />
-//               {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
-//             </div>
-
-//             {/* Password */}
-//             <div>
-//               <input
-//                 type="password"
-//                 name="password"
-//                 placeholder="Password"
-//                 value={formData.password}
-//                 onChange={handleChange}
-//                 className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-//                   errors.password ? 'border-red-500' : 'border-gray-300'
-//                 }`}
-//               />
-//               {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
-//             </div>
-
-//             {/* Remember Me and Forgot Password */}
-//             <div className="flex justify-between items-center text-sm text-gray-600">
-//               <label className="flex items-center">
-//                 <input type="checkbox" className="mr-2" />
-//                 Remember Me
-//               </label>
-//               <a href="#" className="hover:underline text-blue-500">
-//                 Forgot Password?
-//               </a>
-//             </div>
-
-//             {/* Submit Button */}
-//             {errors.submit && (
-//               <p className="text-sm text-red-500 text-center">{errors.submit}</p>
-//             )}
-//             <button
-//               type="submit"
-//               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md transition duration-200"
-//             >
-//               Login Now
-//             </button>
-
-//             {/* Create Account Button */}
-//             <button
-//               type="button"
-//               className="w-full mt-2 border border-gray-300 hover:bg-gray-100 text-gray-700 py-2 rounded-md"
-//               onClick={() => navigate('/register')}
-//             >
-//               Create Account
-//             </button>
-//           </form>
-
-//           {/* Or connect with */}
-//           <div className="mt-6 text-center text-sm text-gray-500">Or you can join with</div>
-//           <div className="flex justify-center gap-4 mt-2">
-//             <img src="/google.png" alt="Google" className="w-6 h-6 cursor-pointer" />
-//             <img src="/facebook.png" alt="Facebook" className="w-6 h-6 cursor-pointer" />
-//             <img src="/twitter.png" alt="Twitter" className="w-6 h-6 cursor-pointer" />
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default LoginPage;
-
-
-
-
-
-
-
-
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -166,7 +11,7 @@ const LoginPage = ({ setIsLoggedIn, setUser, onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [role, setRole] = useState('user'); // State to track the selected role
   const navigate = useNavigate();
-  const BackendUrl=import.meta.env.VITE_API_URL;
+  const BackendUrl = import.meta.env.VITE_API_URL;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -208,16 +53,25 @@ const LoginPage = ({ setIsLoggedIn, setUser, onLogin }) => {
           body: JSON.stringify(formData),
         });
         const data = await res.json();
+        console.log("Login API Response:", data); // debug
+
         if (res.ok) {
           if (rememberMe) {
             localStorage.setItem(role === 'user' ? 'rememberMe' : 'rememberDriver', 'true');
           }
+
+          // ✅ FIX: Use direct response values
+          const userData = {
+            _id: data._id,
+            name: data.name,
+            email: data.email,
+            role,
+          };
+
           if (onLogin) {
-            const userData = role === 'user' ? data.user : { _id: data.driver._id, name: data.driver.name, email: data.driver.email, role: 'driver' };
             onLogin(userData, data.token);
           } else {
             localStorage.setItem('token', data.token);
-            const userData = role === 'user' ? data.user : { _id: data.driver._id, name: data.driver.name, email: data.driver.email, role: 'driver' };
             localStorage.setItem('user', JSON.stringify(userData));
             setUser && setUser(userData);
             setIsLoggedIn(true);

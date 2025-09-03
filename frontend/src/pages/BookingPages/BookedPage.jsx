@@ -22,69 +22,44 @@ export default function BookedPage() {
     const { selectedVehicle, pickups, drops } = state;
 
     useEffect(() => {
+        if (!state || !state.driver || !state.arrivalTime || !state.destinationTime) {
+            return;
+        }
         let arrivalInterval;
         let destInterval;
-        const searchTimer = setTimeout(() => {
-            const names = ['Ramesh Kumar', 'Alice Singh', 'Bob Builder', 'Kalu Lala', 'Mike'];
-            const randomName = names[Math.floor(Math.random() * names.length)];
-            const randomPlate = `DL${Math.floor(Math.random() * 90 + 10)}AB${Math.floor(Math.random() * 9000 + 1000)}`;
-            const randomRating = (Math.random() * 1 + 4).toFixed(1);
-            const driverData = { name: randomName, plate: randomPlate, rating: randomRating };
-            setDriver(driverData);
+        setDriver(state.driver);
+        setArrivalTime(state.arrivalTime);
+        setDestinationTime(state.destinationTime);
+        setIsSearching(false);
 
-            const arrivalMinutes = Math.floor(Math.random() * 3) + 1;
-            setArrivalTime(arrivalMinutes);
-
-            const destMinutes = Math.floor(Math.random() * 11) + 5;
-            setDestinationTime(destMinutes);
-
-            // Save the ride to the backend
-            axios.post(`${BackendUrl}/api/rides`, {
-                selectedVehicle,
-                pickups,
-                drops,
-                driver: driverData,
-                arrivalTime: arrivalMinutes,
-                destinationTime: destMinutes,
-            }, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            }).catch((err) => {
-                console.error('Error saving ride:', err.response?.data || err.message);
+        arrivalInterval = setInterval(() => {
+            setArrivalTime((prev) => {
+                const newTime = prev - 1;
+                if (newTime <= 0) {
+                    clearInterval(arrivalInterval);
+                    setHasArrived(true);
+                    destInterval = setInterval(() => {
+                        setDestinationTime((prevDest) => {
+                            const newDest = prevDest - 1;
+                            if (newDest <= 0) {
+                                clearInterval(destInterval);
+                                navigate('/');
+                                return 0;
+                            }
+                            return newDest;
+                        });
+                    }, 60000);
+                    return 0;
+                }
+                return newTime;
             });
-
-            setIsSearching(false);
-
-            arrivalInterval = setInterval(() => {
-                setArrivalTime((prev) => {
-                    const newTime = prev - 1;
-                    if (newTime <= 0) {
-                        clearInterval(arrivalInterval);
-                        setHasArrived(true);
-                        destInterval = setInterval(() => {
-                            setDestinationTime((prevDest) => {
-                                const newDest = prevDest - 1;
-                                if (newDest <= 0) {
-                                    clearInterval(destInterval);
-                                    navigate('/');
-                                    return 0;
-                                }
-                                return newDest;
-                            });
-                        }, 60000);
-                        return 0;
-                    }
-                    return newTime;
-                });
-            }, 60000);
-
-        }, 3000);
+        }, 60000);
 
         return () => {
-            clearTimeout(searchTimer);
             if (arrivalInterval) clearInterval(arrivalInterval);
             if (destInterval) clearInterval(destInterval);
         };
-    }, [navigate, selectedVehicle, pickups, drops]);
+    }, [navigate, state]);
 
     const handleCancel = () => navigate('/');
 

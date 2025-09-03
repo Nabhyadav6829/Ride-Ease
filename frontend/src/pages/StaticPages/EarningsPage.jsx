@@ -1,213 +1,193 @@
+// pages/Driver/DriverEarningsPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  BarChart3, DollarSign, Clock, Star, Route,
-  ChevronLeft, Calendar, Download, Users, CheckCircle, Award
-} from 'lucide-react';
-// recharts से संबंधित imports हटा दिए गए हैं
+import { ArrowLeft, DollarSign, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import axios from 'axios';
+import DriverBottomNav from '../../components/DriverBottomNav'; 
+import DriverNavbar from '../../components/DriverNavbar';
 
-export default function EarningsPage() {
+// Helper for API calls
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  return {
+    headers: { Authorization: `Bearer ${token}` }
+  };
+};
+
+export default function DriverEarningsPage() {
   const navigate = useNavigate();
-
-  // State to hold data loaded from localStorage
-  const [dashboardStats, setDashboardStats] = useState(null);
-  const [recentRides, setRecentRides] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawStatus, setWithdrawStatus] = useState({ message: '', type: '' });
 
-  // State for UI controls
-  const [selectedPeriod, setSelectedPeriod] = useState('weekly'); // 'today' or 'weekly'
+  const BackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-  const loadData = useCallback(() => {
-    const savedStats = localStorage.getItem('dashboardStats');
-    const savedRides = localStorage.getItem('recentRides');
-
-    if (savedStats) {
-      setDashboardStats(JSON.parse(savedStats));
+  const fetchData = useCallback(async () => {
+    const authHeaders = getAuthHeaders();
+    if (!authHeaders) { 
+      navigate('/driver/login'); 
+      return; 
     }
-
-    if (savedRides) {
-      setRecentRides(JSON.parse(savedRides));
+    setLoading(true);
+    setError(null);
+    try {
+      const [profileRes, transactionsRes] = await Promise.all([
+        axios.get(`${BackendUrl}/api/drivers/profile`, authHeaders),
+        axios.get(`${BackendUrl}/api/drivers/transactions`, authHeaders)
+      ]);
+      setProfile(profileRes.data);
+      setTransactions(transactionsRes.data);
+    } catch (err) {
+      console.error("Failed to fetch earnings data:", err);
+      setError("Could not load your earnings details.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  }, []);
+  }, [navigate, BackendUrl]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    fetchData();
+  }, [fetchData]);
 
-  useEffect(() => {
-    window.addEventListener('focus', loadData);
-    return () => {
-      window.removeEventListener('focus', loadData);
-    };
-  }, [loadData]);
-
-  // Helper to format date for display
-  const formatDate = (isoString) => {
-    return new Date(isoString).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+  const handleWithdrawal = async (e) => {
+    e.preventDefault();
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setWithdrawStatus({ message: 'Please enter a valid amount.', type: 'error' });
+      return;
+    }
+    if (!profile || amount > profile.wallet.balance) {
+      setWithdrawStatus({ message: 'Insufficient balance.', type: 'error' });
+      return;
+    }
+    setWithdrawStatus({ message: 'Processing...', type: 'loading' });
+    try {
+      const authHeaders = getAuthHeaders();
+      const response = await axios.post(`${BackendUrl}/api/drivers/withdraw`, { amount }, authHeaders);
+      setWithdrawStatus({ message: response.data.message, type: 'success' });
+      setWithdrawAmount('');
+      await fetchData(); // Refresh data after withdrawal
+    } catch (err) {
+      const message = err.response?.data?.message || 'Withdrawal failed.';
+      setWithdrawStatus({ message, type: 'error' });
+    }
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center min-h-screen bg-gray-50">Loading earnings data...</div>;
-  }
-
-  if (!dashboardStats) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50 text-center px-4">
-        <BarChart3 className="h-16 w-16 text-gray-400 mb-4" />
-        <h2 className="text-xl font-bold text-gray-700">No Earnings Data Found</h2>
-        <p className="text-gray-500 mt-2">Complete a ride to see your earnings statistics here.</p>
-        <button
-          onClick={() => navigate('/driver/home')}
-          className="mt-6 bg-emerald-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-emerald-600 transition-colors"
-        >
-          Go to Home
-        </button>
-      </div>
+      <>
+        <DriverNavbar />
+        <div className="flex justify-center items-center min-h-screen">
+          <p>Loading Earnings...</p>
+        </div>
+      </>
     );
   }
 
-  const statsToShow = selectedPeriod === 'today' ? dashboardStats.today : dashboardStats.weekly;
-  const totalEarnings = selectedPeriod === 'today' ? dashboardStats.today.earnings : dashboardStats.weekly.totalEarnings;
-  const totalRides = selectedPeriod === 'today' ? dashboardStats.today.rides : dashboardStats.weekly.totalRides;
-
-  // chartData वेरिएबल हटा दिया गया है
+  if (error) {
+    return (
+      <>
+        <DriverNavbar />
+        <div className="flex justify-center items-center min-h-screen text-red-500">
+          <p>{error}</p>
+        </div>
+      </>
+    );
+  }
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-20">
-      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex justify-between items-center">
-            <button
-              onClick={() => navigate('/driver/home')}
-              className="p-2 rounded-lg hover:bg-gray-100"
-            >
-              <ChevronLeft className="h-6 w-6 text-gray-700" />
+    <>
+      <DriverNavbar />
+      <div className="bg-gray-100 min-h-screen">
+        <header className="bg-white shadow-sm sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center space-x-3">
+            <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-gray-100">
+              <ArrowLeft className="h-6 w-6 text-gray-700" />
             </button>
             <h1 className="text-xl font-bold text-gray-900">My Earnings</h1>
-            <button className="p-2 rounded-lg hover:bg-gray-100">
-              <Download className="h-6 w-6 text-gray-700" />
-            </button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-4">
-        {/* Main Earnings Display Card */}
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-lg p-6 mb-4 text-white">
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-sm text-emerald-100 font-medium">
-              {selectedPeriod === 'today' ? "Today's Earnings" : "This Week's Earnings"}
-            </p>
-            <div className="flex items-center space-x-1 bg-emerald-700/50 rounded-full p-1">
-              <button
-                onClick={() => setSelectedPeriod('today')}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${selectedPeriod === 'today' ? 'bg-white text-emerald-600' : 'text-emerald-100'}`}
+        <main className="max-w-7xl mx-auto p-4 pb-24">
+          {/* Balance Section */}
+          <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-2xl shadow-lg p-6 mb-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-lg text-emerald-100">Available Balance</p>
+                <p className="text-4xl font-bold mt-1">₹{profile?.wallet?.balance?.toFixed(2) || '0.00'}</p>
+              </div>
+              <DollarSign className="h-10 w-10 text-emerald-200" />
+            </div>
+            <div className="mt-4 text-emerald-100">
+              <p>Total lifetime earnings: ₹{profile?.wallet?.totalEarnings?.toFixed(2) || '0.00'}</p>
+            </div>
+          </div>
+
+          {/* Withdrawal Form */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Request Withdrawal</h3>
+            <form onSubmit={handleWithdrawal}>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">₹</span>
+                <input
+                  type="number"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  className="w-full pl-7 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+              <button 
+                type="submit" 
+                className="w-full mt-4 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600 transition-colors"
               >
-                Today
+                Request Payout
               </button>
-              <button
-                onClick={() => setSelectedPeriod('weekly')}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${selectedPeriod === 'weekly' ? 'bg-white text-emerald-600' : 'text-emerald-100'}`}
-              >
-                This Week
-              </button>
-            </div>
+            </form>
+            {withdrawStatus.message && (
+              <div className={`mt-4 flex items-center p-3 rounded-lg ${
+                withdrawStatus.type === 'success' ? 'bg-green-100 text-green-700' :
+                withdrawStatus.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+              }`}>
+                {withdrawStatus.type === 'success' && <CheckCircle className="h-5 w-5 mr-2" />}
+                {withdrawStatus.type === 'error' && <AlertCircle className="h-5 w-5 mr-2" />}
+                {withdrawStatus.type === 'loading' && <RefreshCw className="h-5 w-5 mr-2 animate-spin" />}
+                {withdrawStatus.message}
+              </div>
+            )}
           </div>
-          <p className="text-5xl font-bold tracking-tight">
-            ₹{totalEarnings.toLocaleString('en-IN')}
-          </p>
-          <div className="flex items-center space-x-6 mt-4 opacity-90">
-            <div className="text-center">
-              <p className="font-bold text-lg">{totalRides}</p>
-              <p className="text-xs text-emerald-100">Rides</p>
-            </div>
-            <div className="text-center">
-              <p className="font-bold text-lg">{statsToShow.hours || statsToShow.totalHours}h</p>
-              <p className="text-xs text-emerald-100">Online</p>
-            </div>
-            <div className="text-center">
-              <p className="font-bold text-lg">
-                {statsToShow.rating || statsToShow.avgRating}
-                <span className="text-yellow-300">★</span>
-              </p>
-              <p className="text-xs text-emerald-100">Rating</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Daily Earnings Chart वाला सेक्शन यहाँ से हटा दिया गया है */}
-
-        {/* Recent Rides History from localStorage */}
-        {recentRides.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mt-4"> {/* मार्जिन टॉप जोड़ा गया */}
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Transactions</h3>
+          {/* Transaction History */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Transaction History</h3>
             <div className="space-y-3">
-              {recentRides.slice(0, 5).map((ride) => (
-                <div key={ride._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {ride.pickups[0].address} → {ride.drops[0].address}
-                      </p>
-                      {ride.rideType === 'multi' && (
-                        <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-medium">MULTI</span>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-4 text-xs text-gray-500">
-                      <span>{formatDate(ride.createdAt)}</span>
-                      <span className="flex items-center">
-                        <Users className="h-3 w-3 mr-1" />
-                        {ride.passengers}
-                      </span>
-                    </div>
+              {transactions.length > 0 ? transactions.map(tx => (
+                <div key={tx._id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-gray-800">{tx.description}</p>
+                    <p className="text-sm text-gray-500">{new Date(tx.createdAt).toLocaleString()}</p>
+                    {tx.status === 'pending' && (
+                      <span className="text-xs text-orange-500 font-semibold"> (Pending)</span>
+                    )}
                   </div>
-                  <p className="font-bold text-emerald-600 text-lg">
-                    ₹{ride.fare.toLocaleString('en-IN')}
+                  <p className={`text-lg font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                    {tx.type === 'credit' ? '+' : '-'}₹{tx.amount.toFixed(2)}
                   </p>
                 </div>
-              ))}
+              )) : (
+                <p className="text-center text-gray-500">No transactions yet.</p>
+              )}
             </div>
-            <button
-              onClick={() => navigate('/driver/rides')}
-              className="w-full mt-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
-            >
-              View All Transactions
-            </button>
           </div>
-        )}
-      </main>
+        </main>
 
-      {/* Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-        <div className="grid grid-cols-5 py-2">
-          <button onClick={() => navigate('/driver/home')} className="flex flex-col items-center py-2 text-gray-400 hover:text-emerald-600">
-            <Route className="h-6 w-6" />
-            <span className="text-xs mt-1">Home</span>
-          </button>
-          <button className="flex flex-col items-center py-2 text-emerald-600">
-            <BarChart3 className="h-6 w-6" />
-            <span className="text-xs mt-1">Earnings</span>
-          </button>
-           <button onClick={() => navigate('/driver/rides')} className="flex flex-col items-center py-2 text-gray-400 hover:text-emerald-600">
-            <Route className="h-6 w-6" />
-            <span className="text-xs mt-1">My Rides</span>
-          </button>
-          <button onClick={() => navigate('/driver/schedule')} className="flex flex-col items-center py-2 text-gray-400 hover:text-emerald-600">
-            <Calendar className="h-6 w-6" />
-            <span className="text-xs mt-1">Schedule</span>
-          </button>
-          <button onClick={() => navigate('/driver/profile')} className="flex flex-col items-center py-2 text-gray-400 hover:text-emerald-600">
-            <Users className="h-6 w-6" />
-            <span className="text-xs mt-1">Profile</span>
-          </button>
-        </div>
+        {/* Bottom Navigation */}
+        <DriverBottomNav />
       </div>
-    </div>
+    </>
   );
 }
