@@ -1,9 +1,10 @@
+// Navbar.jsx
 import React, { useState } from 'react';
 import { Menu, X, UserRound } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
-export default function Navbar({ user }) {
-   console.log("Navbar user:", user); 
+export default function Navbar({ user, isLoggedIn }) {
+  console.log("Navbar user:", user);
   const [isOpen, setIsOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ export default function Navbar({ user }) {
               )
             )}
 
-            {!user ? (
+            {!isLoggedIn || !user ? (
               <>
                 <button
                   onClick={() => navigate('/login')}
@@ -74,7 +75,7 @@ export default function Navbar({ user }) {
                   {getValidAvatar() ? (
                     <img
                       src={getValidAvatar()}
-                      alt={user.name}
+                      alt={user.name || 'User'}
                       className="w-9 h-9 rounded-full object-cover border-2 border-emerald-200"
                     />
                   ) : (
@@ -83,12 +84,11 @@ export default function Navbar({ user }) {
                 </div>
 
                 <div
-                  className={`absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-50 transition-all duration-200 ${showDropdown ? 'opacity-100 visible' : 'opacity-0 invisible'
-                    }`}
+                  className={`absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-50 transition-all duration-200 ${showDropdown ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
                 >
                   <div className="px-4 py-2 border-b">
                     <p className="text-sm text-gray-500">Signed in as</p>
-                    <p className="font-medium text-gray-800 truncate">{user.name}</p>
+                    <p className="font-medium text-gray-800 truncate">{user.name || 'User'}</p>
                   </div>
                   <button
                     className="w-full text-left px-4 py-2 hover:bg-emerald-100 text-gray-700"
@@ -161,7 +161,7 @@ export default function Navbar({ user }) {
             )
           )}
 
-          {!user ? (
+          {!isLoggedIn || !user ? (
             <>
               <button
                 onClick={() => {
@@ -188,13 +188,13 @@ export default function Navbar({ user }) {
                 {getValidAvatar() ? (
                   <img
                     src={getValidAvatar()}
-                    alt={user.name}
+                    alt={user.name || 'User'}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
                   <UserRound className="w-10 h-10 p-2 text-emerald-700 bg-emerald-100 rounded-full" />
                 )}
-                <div className="text-gray-800 font-semibold">Hi, {user.name}</div>
+                <div className="text-gray-800 font-semibold">Hi, {user.name || 'User'}</div>
               </div>
               <button
                 onClick={() => {
