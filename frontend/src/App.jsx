@@ -227,10 +227,15 @@ function AppContent() {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
-  const handleLogin = (userData, token) => {
+  // ✅ FIX: This function now correctly handles the response from the login API.
+  const handleLogin = (data, token) => {
+    // If the API response has a nested 'user' object, use that. Otherwise, use the data directly.
+    const userData = data.user || data;
+
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('role', userData.role || 'driver');
+    // Default the role to 'user' instead of 'driver' for this login flow.
+    localStorage.setItem('role', userData.role || 'user');
     setIsLoggedIn(true);
     setUser(userData);
   };
@@ -359,16 +364,16 @@ function AppContent() {
 
         {/* --- DRIVER ROUTES --- */}
         <Route 
-            path="/driver/home" 
-            element={<DriverHomePage isLoggedIn={isLoggedIn} user={user} />} 
+          path="/driver/home" 
+          element={<DriverHomePage isLoggedIn={isLoggedIn} user={user} />} 
         />
         <Route 
-            path="/driver/settings" 
-            element={<DriverSettingsPage isLoggedIn={isLoggedIn} user={user} />} 
+          path="/driver/settings" 
+          element={<DriverSettingsPage isLoggedIn={isLoggedIn} user={user} />} 
         />
         <Route 
-            path="/driver/rides" 
-            element={<DriverRidesPage isLoggedIn={isLoggedIn} user={user} />} 
+          path="/driver/rides" 
+          element={<DriverRidesPage isLoggedIn={isLoggedIn} user={user} />} 
         />
         <Route
           path="/driver/logout"
