@@ -12,19 +12,20 @@ const DriverLogoutPage = ({ setIsLoggedIn, setUser }) => {
     localStorage.removeItem('driverProfile');
     localStorage.removeItem('recentRides');
     localStorage.removeItem('dashboardStats');
+    localStorage.removeItem('role'); // 🔑 role bhi clear karna zaroori hai
 
     // 3. Update the main application state to reflect logout
     if (setIsLoggedIn) setIsLoggedIn(false);
     if (setUser) setUser(null);
 
-    // 4. Redirect to the main homepage after a 1.5-second delay
+    // 4. Redirect to the login page after a 1.5-second delay
     const timer = setTimeout(() => {
-      navigate('/'); // You can change this to '/driver/login' if you have a specific driver login page
+      navigate('/login', { replace: true }); // ✅ redirect to login page
     }, 1500);
 
     // 5. Clean up the timer if the component is removed before the timer finishes
     return () => clearTimeout(timer);
-  }, [navigate, setIsLoggedIn, setUser]); // Dependencies for the effect
+  }, [navigate, setIsLoggedIn, setUser]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
