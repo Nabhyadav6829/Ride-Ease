@@ -229,8 +229,9 @@ function AppContent() {
 
   // ✅ FIX: This function now correctly handles the response from the login API.
   const handleLogin = (data, token) => {
-    // If the API response has a nested 'user' object, use that. Otherwise, use the data directly.
-    const userData = data.user || data;
+    // The user data from the API is nested inside the 'data' property.
+    // This change ensures we extract the correct user object.
+    const userData = data.data;
 
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
