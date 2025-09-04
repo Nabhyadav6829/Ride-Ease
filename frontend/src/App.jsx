@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePages/HomePage';
@@ -371,7 +372,8 @@ function AppContent() {
         />
         <Route
           path="/driver/logout"
-          element={<DriverLogoutPage onLogout={handleLogout} />}
+          // ✅ THIS LINE IS CHANGED: Passing correct props to the component
+          element={<DriverLogoutPage setIsLoggedIn={setIsLoggedIn} setUser={setUser} />}
         />
         <Route
           path="/driver/earnings"

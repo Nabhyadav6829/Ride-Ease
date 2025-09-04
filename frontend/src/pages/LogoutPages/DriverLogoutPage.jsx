@@ -20,7 +20,8 @@ const DriverLogoutPage = ({ setIsLoggedIn, setUser }) => {
 
     // 4. Redirect to the login page after a 1.5-second delay
     const timer = setTimeout(() => {
-      navigate('/login', { replace: true }); // ✅ redirect to login page
+      // ✅ THIS LINE IS CHANGED: Redirect to homepage instead of login page
+      navigate('/', { replace: true }); 
     }, 1500);
 
     // 5. Clean up the timer if the component is removed before the timer finishes
