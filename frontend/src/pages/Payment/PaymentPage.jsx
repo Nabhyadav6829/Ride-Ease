@@ -231,6 +231,7 @@ export default function PaymentPage() {
               destinationTime: state.destinationTime,
               appliedCoupon,
               discount: breakdown.discount,
+              fare: breakdown.total,
             },
           };
 
