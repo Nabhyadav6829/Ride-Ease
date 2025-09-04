@@ -3,6 +3,7 @@ import { Menu, X, UserRound } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function Navbar({ user }) {
+   console.log("Navbar user:", user); 
   const [isOpen, setIsOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();

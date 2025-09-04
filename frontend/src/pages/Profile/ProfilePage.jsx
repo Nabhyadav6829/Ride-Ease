@@ -73,7 +73,8 @@ export default function ProfilePage({ isLoggedIn, user, onUserUpdate }) {
     });
     setIsEditing(false);
   };
-
+  
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const handleSave = async () => {
     setError('');
     setIsLoading(true);
@@ -85,8 +86,7 @@ export default function ProfilePage({ isLoggedIn, user, onUserUpdate }) {
         setIsLoading(false);
         return;
       }
-
-      const response = await fetch('/api/users/updatedetails', {
+      const response = await fetch(`${backendUrl}/api/users/updatedetails`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ export default function ProfilePage({ isLoggedIn, user, onUserUpdate }) {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/users/changepassword', {
+      const response = await fetch(`${backendUrl}/api/users/changepassword`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ export default function ProfilePage({ isLoggedIn, user, onUserUpdate }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/users/upload-avatar', {
+      const response = await fetch(`${backendUrl}/api/users/upload-avatar`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
