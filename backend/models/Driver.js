@@ -1,4 +1,3 @@
-// models/Driver.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -30,7 +29,7 @@ const driverSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  profilePicture: { // Added for driver avatar
+  profilePicture: { // Fixed field for driver avatar
     type: String,
     default: 'no-photo.jpg',
   },

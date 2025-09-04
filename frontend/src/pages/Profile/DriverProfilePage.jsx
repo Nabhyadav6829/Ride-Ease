@@ -1,15 +1,17 @@
+// DriverProfilePage.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Star, Car, FileText, LogOut, ChevronRight, Edit,
+  ArrowLeft, Star, Car, FileText, LogOut, Edit,
   User, Mail, Home, KeyRound, Shield, Save, X, UserRound,
-  Bell, Settings, CreditCard
+  Bell, Settings, CreditCard 
 } from 'lucide-react';
 import axios from 'axios';
+// FIX: The profile page now has its own header which needs the user data.
+// We are using a new DriverNavbar component for this.
 import DriverNavbar from '../../components/DriverNavbar';
 import DriverBottomNav from '../../components/DriverBottomNav';
 
-// Helper for API calls
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
   if (!token) return null;
@@ -18,16 +20,17 @@ const getAuthHeaders = () => {
   };
 };
 
-export default function DriverProfilePage() {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+// FIX: Accept 'user' prop from App.js to ensure data consistency.
+export default function DriverProfilePage({ user, onUserUpdate }) { 
+  // FIX: Use the 'user' prop for the initial state instead of fetching again.
+  const [profile, setProfile] = useState(user);
+  const [loading, setLoading] = useState(false); // Changed initial state to false
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Password change modal state
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [passwords, setPasswords] = useState({
     oldPassword: '',
@@ -37,7 +40,6 @@ export default function DriverProfilePage() {
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
 
-  // Privacy settings modal state
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [privacySettings, setPrivacySettings] = useState({
     showDetails: true,
@@ -45,7 +47,6 @@ export default function DriverProfilePage() {
     showOnlineStatus: false,
   });
 
-  // Notification settings modal state
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [notifications, setNotifications] = useState({
     push: true,
@@ -55,39 +56,51 @@ export default function DriverProfilePage() {
     paymentAlerts: true,
   });
 
-  // Image upload state
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Fetch real profile data from the backend
+  // FIX: Instead of fetching profile data, we now sync state from the 'user' prop.
+  // This avoids redundant API calls and ensures the data is always fresh.
   useEffect(() => {
-    const fetchProfileData = async () => {
-      const authHeaders = getAuthHeaders();
-      if (!authHeaders) {
-        navigate('/driver/login');
-        return;
-      }
-      try {
-        const BackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        const { data } = await axios.get(`${BackendUrl}/api/drivers/profile`, authHeaders);
-        setProfile(data);
-        setFormData({
-          name: data.name,
-          email: data.email,
-          phone: data.phone || '',
-          address: data.address || '',
-          vehicleDetails: data.vehicleDetails || '',
-          licenseNumber: data.licenseNumber || '',
-        });
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (user) {
+      setProfile(user);
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        vehicleDetails: user.vehicleDetails || '',
+        licenseNumber: user.licenseNumber || '',
+      });
+    } else {
+        // If no user prop, maybe fetch as a fallback or redirect
+        const fetchProfileData = async () => {
+            const authHeaders = getAuthHeaders();
+            if (!authHeaders) {
+                navigate('/driver/login');
+                return;
+            }
+            try {
+                setLoading(true);
+                const BackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const { data } = await axios.get(`${BackendUrl}/api/drivers/profile`, authHeaders);
+                setProfile(data);
+                setFormData({
+                    name: data.name, email: data.email, phone: data.phone || '',
+                    address: data.address || '', vehicleDetails: data.vehicleDetails || '',
+                    licenseNumber: data.licenseNumber || '',
+                });
+            } catch (error) {
+                console.error("Failed to fetch profile:", error);
+                setError("Failed to load profile data.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProfileData();
+    }
+  }, [user, navigate]);
 
-    fetchProfileData();
-  }, [navigate]);
 
   const getAvatarUrl = () => {
     if (!profile?.profilePicture || profile.profilePicture === 'no-photo.jpg') {
@@ -97,19 +110,16 @@ export default function DriverProfilePage() {
     return `${BackendUrl}/Uploads/${profile.profilePicture}`;
   };
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle edit mode
   const handleEdit = () => {
     setError('');
     setIsEditing(true);
   };
 
-  // Handle cancel edit
   const handleCancel = () => {
     setError('');
     setFormData({
@@ -123,7 +133,6 @@ export default function DriverProfilePage() {
     setIsEditing(false);
   };
 
-  // Handle save profile changes
   const handleSave = async () => {
     setError('');
     setIsLoading(true);
@@ -139,8 +148,15 @@ export default function DriverProfilePage() {
       const BackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const { data } = await axios.put(`${BackendUrl}/api/drivers/profile`, formData, authHeaders);
 
+      const updatedProfile = { ...profile, ...data };
+      setProfile(updatedProfile);
+      
+      // Call the callback to update the global state in App.js
+      if (typeof onUserUpdate === 'function') {
+        onUserUpdate(updatedProfile);
+      }
+
       alert('Profile updated successfully!');
-      setProfile({ ...profile, ...data });
       setIsEditing(false);
 
     } catch (err) {
@@ -150,7 +166,6 @@ export default function DriverProfilePage() {
     }
   };
 
-  // Handle password change
   const handlePasswordInputChange = (e) => {
     const { name, value } = e.target;
     setPasswords(prev => ({ ...prev, [name]: value }));
@@ -165,7 +180,6 @@ export default function DriverProfilePage() {
       setPasswordError("New passwords do not match.");
       return;
     }
-
     if (passwords.newPassword.length < 6) {
       setPasswordError("New password must be at least 6 characters long.");
       return;
@@ -175,7 +189,6 @@ export default function DriverProfilePage() {
     try {
       const authHeaders = getAuthHeaders();
       const BackendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      
       await axios.put(`${BackendUrl}/api/drivers/change-password`, {
         oldPassword: passwords.oldPassword,
         newPassword: passwords.newPassword,
@@ -195,17 +208,14 @@ export default function DriverProfilePage() {
     }
   };
 
-  // Handle privacy settings toggle
   const handlePrivacyToggle = (key) => {
     setPrivacySettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Handle notification settings toggle
   const handleNotificationToggle = (key) => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Handle image upload
   const handleImageUpload = async (fileToUpload) => {
     setError('');
     setIsLoading(true);
@@ -226,19 +236,26 @@ export default function DriverProfilePage() {
         }
       });
 
-      setProfile({ ...profile, profilePicture: data.profilePicture });
+      const updatedProfile = { ...profile, profilePicture: data.profilePicture };
+      setProfile(updatedProfile);
+
+      // Call the callback to update the global state in App.js
+      if (typeof onUserUpdate === 'function') {
+        onUserUpdate(updatedProfile);
+      }
+
       alert('Avatar updated successfully!');
       setImagePreview(null);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to upload image.');
     } finally {
       setIsLoading(false);
-      if(fileInputRef.current) {
+      if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     }
   };
-
+  
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -249,7 +266,9 @@ export default function DriverProfilePage() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/driver/logout');
+    localStorage.removeItem('user');
+    localStorage.removeItem('role');
+    navigate('/login');
   };
 
   if (loading) {
@@ -267,21 +286,13 @@ export default function DriverProfilePage() {
       </div>
     );
   }
-
+  
   return (
     <>
-      <DriverNavbar />
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50 pt-20 px-4 sm:px-6 lg:px-8 pb-20">
-        {/* Header */}
-        <header className="bg-white shadow-sm sticky top-0 z-10 -mt-20 mb-8">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center space-x-3">
-            <button onClick={() => navigate(-1)} className="p-2 rounded-lg hover:bg-gray-100">
-              <ArrowLeft className="h-6 w-6 text-gray-700" />
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">My Profile</h1>
-          </div>
-        </header>
-
+      {/* FIX: Pass the user prop to the navbar to keep it updated */}
+      <DriverNavbar user={user} />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50 pt-8 px-4 sm:px-6 lg:px-8 pb-20">
+        
         <div className="max-w-6xl mx-auto">
           {/* Profile Header */}
           <div className="text-center mb-12">
@@ -428,7 +439,7 @@ export default function DriverProfilePage() {
             </div>
 
             {/* Vehicle Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-8">
+             <div className="bg-white rounded-2xl shadow-lg p-8">
               <div className="flex items-center space-x-3 mb-6">
                 <Car className="h-6 w-6 text-emerald-600" />
                 <h3 className="text-2xl font-bold text-gray-900">Vehicle Information</h3>
@@ -668,7 +679,7 @@ export default function DriverProfilePage() {
           <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
             <h3 className="text-2xl font-bold mb-6">Notification Settings</h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
+               <div className="flex justify-between items-center">
                 <label className="text-gray-700">Push Notifications</label>
                 <button 
                   onClick={() => handleNotificationToggle('push')} 
@@ -726,8 +737,6 @@ export default function DriverProfilePage() {
           </div>
         </div>
       )}
-
-      {/* Bottom Navigation */}
       <DriverBottomNav />
     </>
   );

@@ -1,4 +1,3 @@
-// pages/Driver/DriverEarningsPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, DollarSign, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
@@ -15,7 +14,8 @@ const getAuthHeaders = () => {
   };
 };
 
-export default function DriverEarningsPage() {
+// FIX: Accept the 'user' prop passed from App.jsx to ensure the navbar has the user data.
+export default function DriverEarningsPage({ user }) {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -80,7 +80,8 @@ export default function DriverEarningsPage() {
   if (loading) {
     return (
       <>
-        <DriverNavbar />
+        {/* FIX: Pass the 'user' prop to the DriverNavbar. */}
+        <DriverNavbar user={user} />
         <div className="flex justify-center items-center min-h-screen">
           <p>Loading Earnings...</p>
         </div>
@@ -91,7 +92,8 @@ export default function DriverEarningsPage() {
   if (error) {
     return (
       <>
-        <DriverNavbar />
+        {/* FIX: Pass the 'user' prop to the DriverNavbar. */}
+        <DriverNavbar user={user} />
         <div className="flex justify-center items-center min-h-screen text-red-500">
           <p>{error}</p>
         </div>
@@ -101,7 +103,8 @@ export default function DriverEarningsPage() {
 
   return (
     <>
-      <DriverNavbar />
+      {/* FIX: Pass the 'user' prop to the DriverNavbar. */}
+      <DriverNavbar user={user} />
       <div className="bg-gray-100 min-h-screen">
         <header className="bg-white shadow-sm sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center space-x-3">

@@ -4,6 +4,7 @@ import { ArrowLeft, Route, Filter, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 import DriverBottomNav from "../../components/DriverBottomNav"; // Make sure this path is correct
 import DriverNavbar from '../../components/DriverNavbar';
+
 // Helper for API calls
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
@@ -15,7 +16,8 @@ const getAuthHeaders = () => {
   };
 };
 
-export default function DriverRidesPage() {
+// FIX: Accept the 'user' prop to pass to the navbar.
+export default function DriverRidesPage({ user }) {
   const navigate = useNavigate();
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +113,8 @@ export default function DriverRidesPage() {
   return (
     // This is the single parent element. Everything must be inside it.
     <div className="bg-gray-50 min-h-screen">
-<DriverNavbar />
+      {/* FIX: Pass the 'user' prop to the DriverNavbar. */}
+      <DriverNavbar user={user} />
 
       <main className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8 pb-24"> {/* Added padding-bottom */}
         <div className="flex items-center mb-6">

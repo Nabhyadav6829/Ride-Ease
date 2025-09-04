@@ -23,6 +23,16 @@ import DriverSettingsPage from './pages/SettingsPages/DriverSettings';
 import PaymentPage from './pages/Payment/PaymentPage';
 import LiveRidePage from './pages/BookingPages/LiveRidePage';
 
+// A placeholder for the RideStatusBanner component to avoid errors
+const RideStatusBanner = ({ details, onCancel }) => (
+  <div style={{ position: 'fixed', bottom: 0, width: '100%', background: '#f0f0f0', padding: '10px', borderTop: '1px solid #ccc', zIndex: 100 }}>
+    <h4>Ride in Progress...</h4>
+    {details && details.isSearching && <p>Searching for a driver...</p>}
+    {details && details.driver && <p>Driver: {details.driver.name} is on the way.</p>}
+    <button onClick={onCancel}>Cancel Ride</button>
+  </div>
+);
+
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,7 +80,6 @@ function AppContent() {
         timers: rideTimers
       } : null));
 
-      // Save to backend
       const token = localStorage.getItem('token');
       if (token) {
         fetch('http://localhost:5000/api/rides', {
@@ -142,7 +151,6 @@ function AppContent() {
       const storedUser = localStorage.getItem('user');
       const role = localStorage.getItem('role');
 
-      // For drivers, skip backend verification and use localStorage data
       if (role === 'driver' && token && storedUser) {
         setIsLoggedIn(true);
         setUser(JSON.parse(storedUser));
@@ -150,7 +158,6 @@ function AppContent() {
         return;
       }
 
-      // For non-drivers, perform backend verification
       if (token) {
         try {
           const endpoint = role === 'driver' ? '/api/drivers/verify' : '/api/users/verify';
@@ -183,11 +190,6 @@ function AppContent() {
           setIsLoggedIn(true);
           if (storedUser) {
             setUser(JSON.parse(storedUser));
-          } else {
-            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-            const userData = tokenPayload.user || tokenPayload;
-            setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
           }
         }
       } else {
@@ -201,18 +203,13 @@ function AppContent() {
 
   useEffect(() => {
     const handleStorageChange = (e) => {
-      if (e.key === 'token') {
-        if (!e.newValue) {
-          setIsLoggedIn(false);
-          setUser(null);
-          localStorage.removeItem('role');
-        } else {
-          setIsLoggedIn(true);
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            setUser(JSON.parse(storedUser));
-          }
-        }
+      if (e.key === 'token' && !e.newValue) {
+        setIsLoggedIn(false);
+        setUser(null);
+        localStorage.removeItem('role');
+      }
+      if (e.key === 'user') {
+          setUser(JSON.parse(e.newValue));
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -220,9 +217,10 @@ function AppContent() {
   }, []);
 
   const handleUserUpdate = (updatedUserData) => {
+    const currentUser = JSON.parse(localStorage.getItem('user')) || {};
     const updatedUser = {
+      ...currentUser,
       ...updatedUserData,
-      profileImageUrl: updatedUserData.avatarUrl || updatedUserData.profileImageUrl,
     };
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -231,7 +229,7 @@ function AppContent() {
   const handleLogin = (userData, token) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('role', userData.role || (token.includes('driver') ? 'driver' : 'user'));
+    localStorage.setItem('role', userData.role || 'driver');
     setIsLoggedIn(true);
     setUser(userData);
   };
@@ -357,17 +355,27 @@ function AppContent() {
             )
           }
         />
-        <Route path="/driver/home" element={<DriverHomePage isLoggedIn={true} />} />
-        <Route path="/driver/settings" element={<DriverSettingsPage isLoggedIn={true} />} />
-        {/* <Route path="/driver/login" element={<DriverLoginPage />} /> */}
-        <Route path="/driver/rides" element={<DriverRidesPage />} />
+
+        {/* --- DRIVER ROUTES --- */}
+        <Route 
+            path="/driver/home" 
+            element={<DriverHomePage isLoggedIn={isLoggedIn} user={user} />} 
+        />
+        <Route 
+            path="/driver/settings" 
+            element={<DriverSettingsPage isLoggedIn={isLoggedIn} user={user} />} 
+        />
+        <Route 
+            path="/driver/rides" 
+            element={<DriverRidesPage isLoggedIn={isLoggedIn} user={user} />} 
+        />
         <Route
           path="/driver/logout"
-          element={<DriverLogoutPage setIsLoggedIn={setIsLoggedIn} setUser={setUser} />}
+          element={<DriverLogoutPage onLogout={handleLogout} />}
         />
         <Route
           path="/driver/earnings"
-          element={isLoggedIn ? <EarningsPage /> : <Navigate to="/driver/login" />}
+          element={isLoggedIn ? <EarningsPage isLoggedIn={isLoggedIn} user={user} /> : <Navigate to="/driver/login" />}
         />
         <Route
           path="/driver/profile"
@@ -385,12 +393,10 @@ function AppContent() {
         />
         <Route
           path="/driver/contact"
-          element={isLoggedIn ? <DriverContactPage /> : <Navigate to="/driver/login" />}
+          element={isLoggedIn ? <DriverContactPage isLoggedIn={isLoggedIn} user={user} /> : <Navigate to="/driver/login" />}
         />
       </Routes>
-      {isRideActive && (
-        <RideStatusBanner details={rideDetails} onCancel={handleCancelRide} />
-      )}
+      
     </div>
   );
 }
