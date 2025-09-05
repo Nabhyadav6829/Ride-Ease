@@ -11,6 +11,13 @@ export default function Navbar({ user, isLoggedIn }) {
 
   const navLinks = ['Home', 'Partner', 'Deliverables', 'Contact'];
 
+  // Array for user-specific links for easier mapping
+  const userNavLinks = [
+    { label: 'Profile', path: '/profile' },
+    { label: 'Settings', path: '/settings' },
+    { label: 'My Rides', path: '/my-rides' },
+  ];
+
   const handleLogout = () => {
     navigate('/logout');
   };
@@ -90,30 +97,16 @@ export default function Navbar({ user, isLoggedIn }) {
                     <p className="text-sm text-gray-500">Signed in as</p>
                     <p className="font-medium text-gray-800 truncate">{user.name || 'User'}</p>
                   </div>
-                  <button
-                    className="w-full text-left px-4 py-2 hover:bg-emerald-100 text-gray-700"
-                    onClick={() => navigate('/profile')}
-                  >
-                    Profile
-                  </button>
-                  <button
-                    className="w-full text-left px-4 py-2 hover:bg-emerald-100 text-gray-700"
-                    onClick={() => navigate('/settings')}
-                  >
-                    Settings
-                  </button>
-                  <button
-                    className="w-full text-left px-4 py-2 hover:bg-emerald-100 text-gray-700"
-                    onClick={() => navigate('/my-rides')}
-                  >
-                    My Rides
-                  </button>
-                  <button
-                    className="w-full text-left px-4 py-2 hover:bg-emerald-100 text-gray-700"
-                    onClick={() => navigate('/deliverables')}
-                  >
-                    Deliverables
-                  </button>
+                  {/* Mapping over user links for desktop dropdown */}
+                  {userNavLinks.map((link) => (
+                    <button
+                      key={link.path}
+                      className="w-full text-left px-4 py-2 hover:bg-emerald-100 text-gray-700"
+                      onClick={() => navigate(link.path)}
+                    >
+                      {link.label}
+                    </button>
+                  ))}
                   <hr className="my-1" />
                   <button
                     onClick={handleLogout}
@@ -196,12 +189,31 @@ export default function Navbar({ user, isLoggedIn }) {
                 )}
                 <div className="text-gray-800 font-semibold">Hi, {user.name || 'User'}</div>
               </div>
+              
+              {/* === CHANGE STARTS HERE === */}
+              {/* Mapping over user links for the mobile menu */}
+              <div className="space-y-1">
+                {userNavLinks.map((link) => (
+                  <button
+                    key={link.path}
+                    onClick={() => {
+                      navigate(link.path);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left block py-2 text-gray-700 hover:text-emerald-600 transition-colors duration-300"
+                  >
+                    {link.label}
+                  </button>
+                ))}
+              </div>
+              {/* === CHANGE ENDS HERE === */}
+
               <button
                 onClick={() => {
                   handleLogout();
                   setIsOpen(false);
                 }}
-                className="w-full mt-2 px-4 py-2 border border-red-500 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-300"
+                className="w-full mt-4 px-4 py-2 border border-red-500 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-300"
               >
                 Logout
               </button>
