@@ -204,8 +204,13 @@ const connectDB = async () => {
 
 connectDB();
 
-app.get('/', (req, res) => {
-  res.send(`API is running... Visit the frontend here: <a href="${FrontendUrl}">${FrontendUrl}</a>`);
+app.get("/",(req,res)=>{
+    console.log("Hello from backend");
+    if (req.query.ping) {
+    return res.json({ message: "Backend awake" });
+    }
+    res.redirect("https://ride-ease-six.vercel.app");
+    
 });
 
 app.use('/api/users', userRoutes);
